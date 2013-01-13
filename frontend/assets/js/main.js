@@ -5,6 +5,8 @@ $(function()
     '#8C0', '#F00', '#F90', '#FFEF00',
     'violet', '#444', '#177245', '#08C', '#800020'
   ];
+  var SPARE_COLOR = 'grey';
+  var USER_COLOR = '#00BFFF';
   var GRID = [10, 10];
   var SELECTED_ELEMENT_CLASS = 'element-selected';
 
@@ -12,20 +14,25 @@ $(function()
   var sockets = {};
   var socketCount = 0;
 
-  var $toolbar = $('.editor-toolbar');
-  var $canvas = $('.editor-canvas');
-  var $editors = $('.editor-editors');
-  var $badges = $editors.find('.editor-editors-badges');
+  var $editor = $('.editor');
+  var $toolbar = $editor.find('.editor-toolbar');
+  var $canvas = $editor.find('.editor-canvas');
+  var $editors = $editor.find('.editor-editors');
+  var $editorsCount = $editor.find('.editor-editors-count');
+  var $editorsBadges = $editors.find('.editor-editors-badges');
+  var $chatUsers = $editor.find('.editor-chat-users');
+  var $chatMessages = $editor.find('.editor-chat-messages');
+  var $chatText = $editor.find('.editor-chat-text');
 
   var elementTypes = {};
   var elements = {};
   var selectedElements = [];
   var connections = {};
 
-  var emitElementDrag = _.throttle(
-    socket.emit.bind(socket, 'element.drag'),
-    THROTTLE_TIME
-  );
+  function renderTemplate(file, model)
+  {
+    return $(new EJS({url: '/templates/' + file}).render(model));
+  }
 
   function getPositionDifference($el, newPosition)
   {
@@ -46,6 +53,11 @@ $(function()
 
     return position;
   }
+
+  var emitElementDrag = _.throttle(
+    socket.emit.bind(socket, 'element.drag'),
+    THROTTLE_TIME
+  );
 
   // TODO: z-index
   var dragOptions = {
@@ -145,7 +157,7 @@ $(function()
         return;
       }
 
-      joinedSocket.color = SOCKET_COLORS.shift();
+      joinedSocket.color = SOCKET_COLORS.shift() || SPARE_COLOR;
 
       sockets[joinedSocket.id] = joinedSocket;
 
@@ -154,15 +166,17 @@ $(function()
       var $badge = $('<span class="editor-editors-badge">&nbsp;</span>');
 
       $badge.attr({
-        id: 'editor-' + joinedSocket.id,
+        'data-id': joinedSocket.id,
         title: joinedSocket.name
       });
 
       $badge.css({
-        backgroundColor: joinedSocket.color ? joinedSocket.color : 'grey'
+        backgroundColor: joinedSocket.color
       });
 
-      $badges.append($badge);
+      $editorsBadges.append($badge);
+
+      renderTemplate('editor-chat-user', joinedSocket).appendTo($chatUsers);
     });
 
     if (socketCount === 0)
@@ -170,7 +184,8 @@ $(function()
       return;
     }
 
-    $editors.find('.editor-editors-count').text(socketCount);
+    $editorsCount.text(socketCount);
+    $editor.attr('data-socketCount', socketCount > 5 ? 5 : socketCount);
   });
 
   socket.on('screen.leave', function(sid)
@@ -184,16 +199,18 @@ $(function()
 
     delete sockets[sid];
 
-    if (leaver.color)
+    if (leaver.color !== SPARE_COLOR)
     {
       SOCKET_COLORS.unshift(leaver.color);
     }
 
-    $('#editor-' + sid).remove();
+    $editorsBadges.find('.editor-editors-badge[data-id="' + sid + '"]').remove();
+    $chatUsers.find('.editor-chat-user[data-id="' + sid + '"]').remove();
 
     --socketCount;
 
-    $editors.find('.editor-editors-count').text(socketCount === 0 ? 'No' : socketCount);
+    $editorsCount.text(socketCount === 0 ? 'No' : socketCount);
+    $editor.attr('data-socketCount', socketCount > 5 ? 5 : socketCount);
   });
 
   socket.on('element.dragStart', function(sid, rid)
@@ -203,7 +220,7 @@ $(function()
     element.$.draggable('option', 'disabled', true);
     element.$.addClass('element-dragged');
     element.$.css({
-      outlineColor: sockets[sid].color ? sockets[sid].color : 'grey'
+      outlineColor: sockets[sid].color
     });
   });
 
@@ -322,6 +339,16 @@ $(function()
     toggleGrid();
   });
 
+  $editors.click(function()
+  {
+    $editor.toggleClass('editor-with-chat');
+
+    if ($editor.hasClass('editor-with-chat'))
+    {
+      $chatText.focus();
+    }
+  });
+
   function toggleSnapToGrid()
   {
     var grid = [GRID[0], GRID[1]];
@@ -408,6 +435,75 @@ $(function()
   $canvas.on('xselectableunselected', function(e, ui)
   {
     selectedElements = _.difference(selectedElements,  ui.unselected);
+  });
+
+  // Chat
+  var lastMessageUser;
+
+  function addChatMessage(data)
+  {
+    data.followup = lastMessageUser === data.user;
+
+    lastMessageUser = data.user;
+
+    var userSocket = sockets[data.user];
+
+    if (typeof userSocket === 'undefined')
+    {
+      if (data.user === socket.socket.sessionid)
+      {
+        data.color = USER_COLOR;
+        data.user = 'Me';
+      }
+      else
+      {
+        data.color = SPARE_COLOR;
+        data.user = 'Guest';
+      }
+    }
+    else
+    {
+      data.user = userSocket.name;
+      data.color = userSocket.color;
+    }
+
+    var scrollToBottom = $chatMessages.height() + $chatMessages[0].scrollTop >= $chatMessages[0].scrollHeight;
+
+    renderTemplate('editor-chat-message', data).appendTo($chatMessages);
+
+    if (scrollToBottom)
+    {
+      $chatMessages.scrollTop($chatMessages[0].scrollHeight);
+    }
+  }
+
+  $chatText.on('keypress', function(e)
+  {
+    if (e.keyCode !== 13)
+    {
+      return;
+    }
+
+    socket.emit('chat.message', {
+      text: this.value
+    });
+
+    addChatMessage({
+      user: socket.socket.sessionid,
+      text: this.value
+    });
+
+    this.value = '';
+
+    return false;
+  });
+
+  socket.on('chat.message', function(data)
+  {
+    if (data.user !== socket.socket.sessionid)
+    {
+      addChatMessage(data);
+    }
   });
 
   // Start

@@ -57,4 +57,12 @@ app.io.sockets.on('connection', function(socket)
       done(err);
     });
   });
+
+  socket.on('chat.message', function onChatMessage(data)
+  {
+    app.io.sockets.in(DEFAULT_SCREEN).emit('chat.message', {
+      user: socket.id,
+      text: data.text
+    });
+  });
 });

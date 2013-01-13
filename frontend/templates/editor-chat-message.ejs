@@ -1,0 +1,6 @@
+<p class="editor-chat-message <%= followup ? 'editor-chat-message-followup' : '' %>">
+  <% if (!followup) { %>
+  <span class="editor-chat-message-user" style="color: <%= color %>"><%= user %>:</span>
+  <% } %>
+  <%= text %>
+</p>

@@ -19,7 +19,7 @@
     //-->
   </div>
 </div>
-<div class="editor">
+<div class="editor" data-socketCount="0">
   <div class="btn-toolbar editor-toolbar">
     <div class="btn-group">
       <button class="btn active editor-toolbar-snap" data-toggle="button">Snap To</button>
@@ -50,13 +50,22 @@
       <button class="btn">9</button>
     </div>
     <div class="btn-group pull-right">
-      <p class="editor-editors">
+      <p class="editor-editors" title="Toggle chat">
+        <i class="icon-chevron-right editor-editors-show"></i>
+        <i class="icon-chevron-down editor-editors-hide"></i>
         <span class="editor-editors-count">No</span> other(s) participating
         <span class="editor-editors-badges"></span>
       </p>
     </div>
   </div>
   <div class="editor-canvas"></div>
+  <div class="editor-chat">
+    <div class="editor-chat-users"></div>
+    <div class="editor-chat-messages"></div>
+    <p class="editor-chat-send">
+      <textarea class="editor-chat-text" placeholder="Type here and press Enter to send a message..."></textarea>
+    </p>
+  </div>
 </div>
 <script src="/socket.io/socket.io.js"></script>
 <script src="/vendor/lodash/lodash.js"></script>
