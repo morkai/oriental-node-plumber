@@ -396,7 +396,8 @@ $(function()
   $canvas.xselectable({
     filter: '.element',
     cancel: '.element',
-    selectedCssClass: SELECTED_ELEMENT_CLASS
+    selectedCssClass: SELECTED_ELEMENT_CLASS,
+    boxCssClass: 'editor-selection-box'
   });
 
   $canvas.on('xselectableselected', function(e, ui)

@@ -1,0 +1,46 @@
+.editor {
+  position: absolute;
+  top: 4em;
+  left: 1em;
+  right: 1em;
+  bottom: 1em;
+}
+.editor-toolbar {
+  margin: 0;
+  z-index: 10000;
+  position: relative;
+}
+.editor-editors {
+  font-size: 14px;
+  line-height: 20px;
+  padding: 5px 0;
+  margin: 0;
+}
+.editor-editors-badges {
+  max-width: 9em;
+  display: inline-block;
+  overflow: hidden;
+}
+.editor-editors-badge {
+  display: inline-block;
+  width: 1.25em;
+  height: 1.25em;
+  margin-left: .25em;
+  vertical-align: middle;
+}
+.editor-canvas {
+  position: absolute;
+  top: 3em;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: scroll;
+  border-top: 1px solid #e3e3e3;
+  border-left: 1px solid #e3e3e3;
+  background: url(/grid.svg) left top repeat;
+}
+.editor-selection-box {
+  background-color: rgba(51, 153, 255, .1);
+  border: 1px dotted rgb(51, 153, 255);
+  z-index: 1000;
+}

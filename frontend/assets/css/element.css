@@ -1,0 +1,48 @@
+.element-templates {
+  position: absolute;
+  top: 0;
+  left: -9999px;
+}
+.element {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  overflow: hidden;
+  outline: 1px dashed transparent;
+  outline-offset: 2px;
+}
+.element.ui-draggable-dragging,
+.element-dragged {
+  opacity: .8;
+}
+.element-selected {
+  outline-color: #00BFFF;
+}
+.element-rect,
+.element-circle {
+  width: 78px;
+  height: 78px;
+  background: whiteSmoke;
+  text-shadow: 0 1px 1px #FFF;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  display: table;
+  border: 1px solid #C5C5C5;
+  border-color: rgba(0, 0, 0, 0.15) rgba(0, 0, 0, 0.15) rgba(0, 0, 0, 0.25);
+}
+.element-rect:hover,
+.element-circle:hover {
+  background: #E6E6E6;
+}
+.element-rect p,
+.element-circle p {
+  margin: 0;
+  padding: 10px;
+  line-height: 1;
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+}
+.element-circle {
+  border-radius: 40px;
+}
