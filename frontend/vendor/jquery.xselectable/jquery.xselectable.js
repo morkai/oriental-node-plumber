@@ -466,17 +466,17 @@
       var selectable =
         (options.positioner || defaultPositioner).call(self, this);
       selectable.element = this;
+      selectable.initiallySelected =
+        $element.hasClass(options.selectedCssClass);
       if (options.modifiers) {
-        selectable.selected = $element.hasClass(options.selectedCssClass);
-        selectable.initiallySelected = selectable.selected;
+        selectable.selected = selectable.initiallySelected;
         if (selectable.selected && !evt.ctrlKey) {
           $element.removeClass(options.selectedCssClass);
           selectable.selected = false;
         }
       } else {
-        selectable.selected = false;
-        selectable.initiallySelected = false;
         $element.removeClass(options.selectedCssClass);
+        selectable.selected = false;
       }
       selectables.push(selectable);
     });
@@ -857,15 +857,27 @@
 
       var selected = [], unselected = [];
       for (var i = data.selectables.length - 1; i >= 0; i--) {
-        (data.selectables[i].selected ? selected : unselected).push(
-            data.selectables[i].element);
+        var selectable = data.selectables[i];
+        if (selectable.selected) {
+          if (!selectable.initiallySelected) {
+            selected.push(selectable.element);
+          }
+        } else {
+          if (selectable.initiallySelected) {
+            unselected.push(selectable.element);
+          }
+        }
       }
       delete data.selectables;
 
       // If selection ever started (we moved past the threshold distance),
       // fire the completion events.
-      $this.trigger(pluginName + 'selected', {'selected': selected});
-      $this.trigger(pluginName + 'unselected', {'unselected': unselected});
+      if (selected.length > 0) {
+        $this.trigger(pluginName + 'selected', {'selected': selected});
+      }
+      if (unselected.length > 0) {
+        $this.trigger(pluginName + 'unselected', {'unselected': unselected});
+      }
       $this.trigger(pluginName + 'stop');
     }
   };

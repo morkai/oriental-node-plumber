@@ -399,22 +399,13 @@ $(function()
     selectedCssClass: SELECTED_ELEMENT_CLASS
   });
 
-  $canvas.on('xselectablestart', function(e, ui)
-  {
-    selectedElements = [];
-  });
-
   $canvas.on('xselectableselected', function(e, ui)
   {
-    console.log('xselectableselected', ui);
-
-    selectedElements = ui.selected;
+    selectedElements.push.apply(selectedElements, ui.selected);
   });
 
   $canvas.on('xselectableunselected', function(e, ui)
   {
-    console.log('xselectableunselected', ui);
-
     selectedElements = _.difference(selectedElements,  ui.unselected);
   });
 
