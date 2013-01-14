@@ -91,7 +91,6 @@
 			self._jsPlumb = params["_jsPlumb"];			
 			self.getId = function() { return id; };
 			self.tooltip = params.tooltip;
-      self.cssClass = params.cssClass || self._jsPlumb.Defaults.CssClass || jsPlumb.Defaults.CssClass
 			self.hoverClass = params.hoverClass || self._jsPlumb.Defaults.HoverClass || jsPlumb.Defaults.HoverClass;				
 			
 			// all components can generate events
@@ -103,7 +102,7 @@
 			// it used to call clone.  but it would be nice to find some time to look
 			// further at this.
 			this.clone = function() {
-				var o = {};
+				var o = new Object();
 				self.constructor.apply(o, a);
 				return o;
 			};
@@ -262,9 +261,9 @@
 		    
 		    this.isHover = function() { return _hover; };
 			
-			var zIndex = null;
-			this.setZIndex = function(v) { zIndex = v; };
-			this.getZIndex = function() { return zIndex; };
+			//var zIndex = null;
+			//this.setZIndex = function(v) { zIndex = v; };
+			//this.getZIndex = function() { return zIndex; };
 
 			var jpcl = jsPlumb.CurrentLibrary,
 				events = [ "click", "dblclick", "mouseenter", "mouseout", "mousemove", "mousedown", "mouseup", "contextmenu" ],
@@ -639,7 +638,6 @@
 		 *  -   *ConnectionsDetachable*		Whether or not connections are detachable by default (using the mouse). Defaults to true.
 		 *  -   *ConnectionOverlays*		The default overlay definitions for Connections. Defaults to an empty list.
 		 * 	-	*Connector*				The default connector definition to use for all connections.  Default is "Bezier".
-		 * 	-   *ConnectorZIndex*       Optional value for the z-index of Connections that are not in the hover state. If you set this, jsPlumb will set the z-index of all created Connections to be this value, and the z-index of any Connections in the hover state to be this value plus one. This brings hovered connections up on top of others, which is a nice effect in busy UIs.
 		 *  -   *Container*				Optional selector or element id that instructs jsPlumb to append elements it creates to a specific element.
 		 * 	-	*DragOptions*			The default drag options to pass in to connect, makeTarget and addEndpoint calls. Default is empty.
 		 * 	-	*DropOptions*			The default drop options to pass in to connect, makeTarget and addEndpoint calls. Default is empty.
@@ -666,7 +664,6 @@
             ConnectionsDetachable : true,
             ConnectionOverlays : [ ],
             Connector : "Bezier",
-			ConnectorZIndex : null,
 			Container : null,
 			DragOptions : { },
 			DropOptions : { },
@@ -1353,7 +1350,7 @@
 		 * Property: hoverClass 
 		 *   The CSS class to set on Connection or Endpoint elements when hovering. This value is a String and can have multiple classes; the entire String is appended as-is.
 		 */
-		this.hoverClass = "_jsPlumb_hover";            
+		this.hoverClass = "_jsPlumb_hover";
 
 		/*
 		 * Property: endpointClass 
@@ -1361,10 +1358,16 @@
 		 */
 		this.endpointClass = "_jsPlumb_endpoint";
 
-		/*
-		 * Property: overlayClass 
-		 * The CSS class to set on an Overlay that is an HTML element. This value is a String and can have multiple classes; the entire String is appended as-is.
-		 */
+    /*
+     * Property: floatingEndpointClass
+     *   The CSS class to set on floating Endpoint elements. This value is a String and can have multiple classes; the entire String is appended as-is.
+     */
+    this.floatingEndpointClass = "_jsPlumb_endpoint_floating";
+
+    /*
+     * Property: overlayClass
+     * The CSS class to set on an Overlay that is an HTML element. This value is a String and can have multiple classes; the entire String is appended as-is.
+     */
 		this.overlayClass = "_jsPlumb_overlay";
 		
 		this.Anchors = {};
@@ -2063,7 +2066,7 @@ between this method and jsPlumb.reset).
 				setParameter:setter(list, "setParameter", executor),		
 				setParameters:setter(list, "setParameters", executor),
 				setVisible:setter(list, "setVisible", executor),
-				setZIndex:setter(list, "setZIndex", executor),
+				//setZIndex:setter(list, "setZIndex", executor),
 				repaint:setter(list, "repaint", executor),
 				addType:setter(list, "addType", executor),
 				toggleType:setter(list, "toggleType", executor),
@@ -2140,6 +2143,7 @@ between this method and jsPlumb.reset).
 		*	scope - see getConnections
 		* 	source - see getConnections
 		*	target - see getConnections
+        *   connections - an existing list of Connections.  If you supply this, 'source' and 'target' will be ignored.
 		*
 		* Returns:
 		* A list of Connections on which operations may be executed. 'Setter' type operations can be chained; 'getter' type operations
@@ -2190,7 +2194,7 @@ between this method and jsPlumb.reset).
 		this.select = function(params) {
 			params = params || {};
 			params.scope = params.scope || "*";
-			var c = _currentInstance.getConnections(params, true);
+			var c = params.connections || _currentInstance.getConnections(params, true);
 			return _makeConnectionSelectHandler(c);							
 		};
 		
@@ -2356,10 +2360,13 @@ between this method and jsPlumb.reset).
 		 * jsPlumb demo pages).
 		 *
 		 * Parameters:
+         *  context  -   an element to search from. may be omitted (not null: omitted. as in you only pass one argument to the function)
 		 * 	spec 	-	a valid selector string.
+         *
+            
 		 */ 	
-		this.getSelector = function(spec) {
-			return jsPlumb.CurrentLibrary.getSelector(spec);
+		this.getSelector = function() {
+			return jsPlumb.CurrentLibrary.getSelector.apply(null, arguments);
 		};
 		
 		// get the size of the element with the given id, perhaps from cache.
@@ -2894,6 +2901,13 @@ between this method and jsPlumb.reset).
 
 					// if disabled, return.
 					if (!_sourcesEnabled[idToRegisterAgainst]) return;
+                    
+                    // if a filter was given, run it, and return if it says no.
+					if (p.filter) {
+						// pass the original event to the user: 
+						var r = p.filter(jpcl.getOriginalEvent(e), _el);
+						if (r === false) return;
+					}
 					
 					// if maxConnections reached
 					var sourceCount = _currentInstance.select({source:idToRegisterAgainst}).length
@@ -2905,14 +2919,7 @@ between this method and jsPlumb.reset).
 							}, e);
 						}
 						return false;
-					}
-
-					// if a filter was given, run it, and return if it says no.
-					if (p.filter) {
-						// pass the original event to the user: 
-						var r = p.filter(jpcl.getOriginalEvent(e), _el);
-						if (r === false) return;
-					}
+					}					
 
 					// make sure we have the latest offset for this div 
 					var myOffsetInfo = _updateOffset({elId:elid});		
@@ -3278,6 +3285,7 @@ between this method and jsPlumb.reset).
 		* 
 		* Parameters: 
 		*	el - either an element id, or a selector for an element.
+        *   recurse - whether or not to recurse down through this elements children and remove their endpoints too. defaults to false.
 		*  	 
 		* Returns: 
 		* The current jsPlumb instance.
@@ -3285,14 +3293,27 @@ between this method and jsPlumb.reset).
 		* See Also: 
 		* <removeEndpoint>
 		*/
-		this.removeAllEndpoints = function(el) {
-			var elId = jsPlumbUtil.isString(el) ? el : _getId(_getElementObject(el)),
-			    ebe = endpointsByElement[elId];
-			if (ebe) {
-				for ( var i = 0; i < ebe.length; i++) 
-					_currentInstance.deleteEndpoint(ebe[i]);
-			}
-			delete endpointsByElement[elId];
+		this.removeAllEndpoints = function(el, recurse) {
+            var _one = function(_el) {                
+                var elId = jsPlumbUtil.isString(_el) ? _el : _getId(_getElementObject(_el)),
+                    ebe = endpointsByElement[elId];
+                if (ebe) {
+                    for ( var i = 0; i < ebe.length; i++) 
+                        _currentInstance.deleteEndpoint(ebe[i]);
+                }
+                delete endpointsByElement[elId];
+                
+                if (recurse) {
+                    var del = jsPlumb.CurrentLibrary.getDOMElement(_getElementObject(_el));
+                    if (del && del.nodeType != 3 && del.nodeType != 8 ) {
+                        for (var i = 0; i < del.childNodes.length; i++) {
+                            _one(del.childNodes[i]);
+                        }
+                    }
+                }
+                
+            };
+            _one(el);
 			return _currentInstance;
 		};
             
@@ -3302,11 +3323,11 @@ between this method and jsPlumb.reset).
         * and their connections.
         *
         * Parameters:
-        *  el - either an element id, or a selector for the element.
+        *  el - either an element id, a DOM element, or a selector for the element.
         */
         this.remove = function(el) {
             el = _getElementObject(el);
-            _currentInstance.removeAllEndpoints(el);
+            _currentInstance.removeAllEndpoints(el, true);
             jsPlumb.CurrentLibrary.removeElement(el);
         };
 
@@ -4417,6 +4438,23 @@ between this method and jsPlumb.reset).
            
 // END EDITABLE            
             
+// ADD CLASS/REMOVE CLASS - override to support adding/removing to/from endpoints
+            var _ac = this.addClass, _rc = this.removeClass;
+            this.addClass = function(c, informEndpoints) {
+                _ac(c);
+                if (informEndpoints) {
+                    self.endpoints[0].addClass(c);
+                    self.endpoints[1].addClass(c);                    
+                }
+            };
+            this.removeClass = function(c, informEndpoints) {
+                _rc(c);
+                if (informEndpoints) {
+                    self.endpoints[0].removeClass(c);
+                    self.endpoints[1].removeClass(c);                    
+                }
+            };            
+            
 // TYPE		
 			
 			this.getTypeDescriptor = function() { return "connection"; };
@@ -4446,9 +4484,6 @@ between this method and jsPlumb.reset).
 			// override setHover to pass it down to the underlying connector
 			_superClassHover = self.setHover;
 			self.setHover = function(state) {
-				var zi = _currentInstance.ConnectorZIndex || jsPlumb.Defaults.ConnectorZIndex;
-				if (zi)
-					self.connector.setZIndex(zi + (state ? 1 : 0));
 				self.connector.setHover.apply(self.connector, arguments);				
 				_superClassHover.apply(self, arguments);
 			};
@@ -4460,15 +4495,15 @@ between this method and jsPlumb.reset).
 			};
 // END HOVER
 
-
 			var makeConnector = function(renderMode, connector, connectorArgs) {
-				var c = {};
+				var c = new Object();
 				jsPlumb.Connectors[connector].apply(c, [connectorArgs]);
 				jsPlumb.ConnectorRenderers[renderMode].apply(c, [connectorArgs]);	
 				return c;
 			};
             
             var documentMouseUp = function(e) {
+                console.log("mouseup");  
                 jsPlumb.CurrentLibrary.unbind(document, "mouseup", documentMouseUp);
             };
 			
@@ -4493,19 +4528,23 @@ between this method and jsPlumb.reset).
 					else
 						this.connector = makeConnector(renderMode, connector[0], jsPlumbUtil.merge(connector[1], connectorArgs));
 				}
-				self.canvas = self.connector.canvas;
+				self.canvas = self.connector.canvas;                
 				// binds mouse listeners to the current connector.
 				_bindListeners(self.connector, self, _internalHover);
                 
                 // bind to mousedown and mouseup, for editing
-                self.connector.bind("mousedown", function(e) {
+                self.connector.bind("mousedown", function(c, e) {
+                    var x = (e.pageX || e.page.x),
+                        y = (e.pageY || e.page.y),
+                        oe = jsPlumb.CurrentLibrary.getElementObject(self.canvas),
+                        o = jsPlumb.CurrentLibrary.getOffset(oe);
+                    
+                    //var    p = self.connector.findSegmentForPoint(x - o.left, y - o.top);
+                    self.connector.editStart(x - o.left, y - o.top);
+                    
+                    console.log("mousedown", x, y, o);
                     jsPlumb.CurrentLibrary.bind(document, "mouseup", documentMouseUp);
-                });
-				
-				// set z-index if it was set on Defaults.
-				var zi = _currentInstance.ConnectorZIndex || jsPlumb.Defaults.ConnectorZIndex;
-				if (zi)
-					self.connector.setZIndex(zi);
+                });				
                 
                 // if underlying connector not editable, set editable to false;
                 if (!self.connector.isEditable())
@@ -5066,14 +5105,28 @@ between this method and jsPlumb.reset).
                     stopped = true;
                 }
             };
-		};		
-		
-		var _makeFloatingEndpoint = function(paintStyle, referenceAnchor, endpoint, referenceCanvas, sourceElement) {			
-			var floatingAnchor = new FloatingAnchor( { reference : referenceAnchor, referenceCanvas : referenceCanvas });
-        	//setting the scope here should not be the way to fix that mootools issue.  it should be fixed by not
-        	// adding the floating endpoint as a droppable.  that makes more sense anyway!
-        	return _newEndpoint({ paintStyle : paintStyle, endpoint : endpoint, anchor : floatingAnchor, source : sourceElement, scope:"__floating" });
 		};
+
+    var _makeFloatingEndpoint = function(paintStyle, referenceAnchor, endpoint, referenceCanvas, sourceElement) {
+      var floatingAnchor = new FloatingAnchor({
+        reference: referenceAnchor,
+        referenceCanvas: referenceCanvas
+      });
+
+      //setting the scope here should not be the way to fix that mootools issue.  it should be fixed by not
+      // adding the floating endpoint as a droppable.  that makes more sense anyway!
+      var floatingEndpoint = _newEndpoint({
+        paintStyle: paintStyle,
+        endpoint: endpoint,
+        anchor: floatingAnchor,
+        source: sourceElement,
+        scope: "__floating"
+      });
+
+      floatingEndpoint.addClass(floatingEndpoint._jsPlumb.floatingEndpointClass);
+
+      return floatingEndpoint;
+    };
 		
 		//
 		// creates a placeholder div for dragging purposes, adds it to the DOM, and pre-computes its offset.
@@ -5285,7 +5338,7 @@ between this method and jsPlumb.reset).
 				// the whole world.
 				var argsForClone = jsPlumb.extend({}, endpointArgs);						
 				_endpoint.clone = function() {
-					var o = {};
+					var o = new Object();
 					_endpoint.constructor.apply(o, [argsForClone]);
 					return o;
 				};
@@ -5351,8 +5404,8 @@ between this method and jsPlumb.reset).
                 self.connectionsDetachable = false;
 			var dragAllowedWhenFull = params.dragAllowedWhenFull || true;
 
-      if (params.cssClass)
-        this.addClass(params.cssClass);
+      if (typeof params.cssClass === 'string')
+			  self.addClass(params.cssClass);
 
 			if (params.onMaxConnections)
 				self.bind("maxConnections", params.onMaxConnections);
@@ -5548,7 +5601,7 @@ between this method and jsPlumb.reset).
 					anchor : inPlaceAnchor, 
 					source : _element, 
 					paintStyle : this.getPaintStyle(),
-          cssClass: self.cssClass,
+          cssClass: params.cssClass,
 					endpoint : params.hideOnDrag ? "Blank" : _endpoint,
 					_transient:true,
                     scope:self.scope
