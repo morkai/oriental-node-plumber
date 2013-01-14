@@ -133,6 +133,13 @@ $(function()
     var el = e.target;
     var $el = $(el);
     var movedElements = [];
+    var positionDifference = getPositionDifference($el, ui.position);
+    var isDrag = eventName === 'element.drag';
+
+    if (isDrag && positionDifference.left === 0 && positionDifference.top === 0)
+    {
+      return;
+    }
 
     movedElements.push({
       id: $el.attr('data-id'),
@@ -143,7 +150,7 @@ $(function()
     if (selectedElements.length < 2
       || selectedElements.indexOf(el) === -1)
     {
-      if (eventName === 'element.drag')
+      if (isDrag)
       {
         emitElementDrag(movedElements, done);
       }
@@ -152,11 +159,10 @@ $(function()
         socket.emit(eventName, movedElements, done);
       }
 
-      return null;
+      return;
     }
 
     var elementsToRepaint = [];
-    var positionDifference = getPositionDifference($el, ui.position);
 
     selectedElements.forEach(function(selectedElement)
     {
@@ -182,7 +188,7 @@ $(function()
       elementsToRepaint.push($selectedElement);
     });
 
-    if (eventName === 'element.drag')
+    if (isDrag)
     {
       emitElementDrag(movedElements, done);
     }
@@ -308,13 +314,13 @@ $(function()
       }
 
       element.$
-        .removeClass('element-dragged')
-        .draggable('option', 'disabled', false)
         .css({
           left: movedElement.left + 'px',
           top: movedElement.top + 'px',
           outlineColor: ''
-        });
+        })
+        .removeClass('element-dragged')
+        .draggable('option', 'disabled', false);
 
       elementsToRepaint.push(element.$);
     });
