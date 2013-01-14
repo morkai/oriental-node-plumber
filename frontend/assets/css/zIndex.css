@@ -1,0 +1,18 @@
+.editor-toolbar {
+  z-index: 2000;
+}
+.editor-selection-box {
+  z-index: 1000;
+}
+.element {
+  z-index: 100;
+}
+.element-endpoint {
+  z-index: 600;
+}
+.element-endpoint.ui-draggable-dragging {
+  z-index: 601;
+}
+.element-connection {
+  z-index: 500;
+}

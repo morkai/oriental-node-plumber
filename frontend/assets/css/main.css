@@ -1,10 +1,14 @@
 @import "scrollbar.css";
 @import "editor.css";
 @import "element.css";
+@import "zIndex.css";
 
 body {
   cursor: default;
 }
 .navbar .brand {
   margin-left: 0;
+}
+._jsPlumb_endpoint_floating {
+  visibility: hidden;
 }

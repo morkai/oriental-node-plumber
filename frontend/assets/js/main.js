@@ -152,9 +152,10 @@ $(function()
         socket.emit(eventName, movedElements, done);
       }
 
-      return;
+      return null;
     }
 
+    var elementsToRepaint = [];
     var positionDifference = getPositionDifference($el, ui.position);
 
     selectedElements.forEach(function(selectedElement)
@@ -177,6 +178,8 @@ $(function()
         left: newPosition.left + 'px',
         top: newPosition.top + 'px'
       });
+
+      elementsToRepaint.push($selectedElement);
     });
 
     if (eventName === 'element.drag')
@@ -187,6 +190,8 @@ $(function()
     {
       socket.emit(eventName, movedElements, done);
     }
+
+    jsPlumb.repaint(elementsToRepaint);
   }
 
   function setElementPositionData(movedElement)
@@ -237,6 +242,7 @@ $(function()
   socket.on('element.dragStart', function(sid, movedElements)
   {
     var color = _.isObject(sockets[sid]) ? sockets[sid].color : SPARE_COLOR;
+    var elementsToRepaint = [];
 
     movedElements.forEach(function(movedElement)
     {
@@ -250,13 +256,22 @@ $(function()
       element.$
         .draggable('option', 'disabled', true)
         .addClass('element-dragged')
-        .css('outline-color', color);
+        .css({
+          left: movedElement.left + 'px',
+          top: movedElement.top + 'px',
+          outlineColor: color
+        });
+
+      elementsToRepaint.push(element.$);
     });
+
+    jsPlumb.repaint(elementsToRepaint);
   });
 
   socket.on('element.drag', function(sid, movedElements)
   {
     var color = _.isObject(sockets[sid]) ? sockets[sid].color : SPARE_COLOR;
+    var elementsToRepaint = [];
 
     movedElements.forEach(function(movedElement)
     {
@@ -272,11 +287,17 @@ $(function()
         top: movedElement.top + 'px',
         outlineColor: color
       });
+
+      elementsToRepaint.push(element.$);
     });
+
+    jsPlumb.repaint(elementsToRepaint);
   });
 
   socket.on('element.dragStop', function(sid, movedElements)
   {
+    var elementsToRepaint = [];
+
     movedElements.forEach(function(movedElement)
     {
       var element = elements[movedElement.id];
@@ -294,31 +315,103 @@ $(function()
           top: movedElement.top + 'px',
           outlineColor: ''
         });
+
+      elementsToRepaint.push(element.$);
     });
+
+    jsPlumb.repaint(elementsToRepaint);
   });
 
   // Canvas
+
+  var referenceEndpointOptions = {
+    dropOptions: {
+      hoverClass: 'element-endpoint-accept',
+      activeClass: 'element-endpoint-valid'
+    },
+    hoverClass: 'element-endpoint-hover',
+    connectorClass: 'element-connection',
+    connectorHoverClass: 'element-connection-hover'
+  };
+
+  /**
+   * @constructor
+   * @param {object} data
+   */
+  function ElementType(data)
+  {
+    this.id = data.id;
+
+    this.name = data.name;
+
+    this.endpoints = data.endpoints;
+
+    this.templateUrl = '/templates/elementTypes/' + this.id;
+  }
+
+  /**
+   * @param {object} element
+   * @return {jQuery}
+   */
+  ElementType.prototype.renderElement = function(element)
+  {
+    element.$ = $(new EJS({url: this.templateUrl}).render(element));
+
+    element.$.attr({
+      'data-id': element.id,
+      'data-top': element.y,
+      'data-left': element.x
+    });
+
+    element.$.css({
+      top: element.y + 'px',
+      left: element.x + 'px'
+    });
+
+    return element.$;
+  };
+
+  /**
+   * @param {object} element
+   */
+  ElementType.prototype.addEndpoints = function(element)
+  {
+    if (!_.isObject(element.$))
+    {
+      return;
+    }
+
+    if (!_.isObject(element.endpoints))
+    {
+      element.endpoints = {};
+    }
+
+    this.endpoints.forEach(function(options)
+    {
+      var cssClass = [
+        'element-endpoint',
+        'element-' + this.id + '-endpoint',
+        'element-' + this.id + '-endpoint-' + options.id
+      ];
+
+      var endpoint = jsPlumb.addEndpoint(
+        element.$[0], {
+          isSource: options.source === true,
+          isTarget: options.target === true,
+          maxConnections: options.maxConnections || 1,
+          anchor: options.anchor,
+          cssClass: cssClass.join(' ')
+        },
+        referenceEndpointOptions
+      );
+
+      element.endpoints[options.id] = endpoint;
+    }, this);
+  };
+
   function addElementType(elementType)
   {
-    elementTypes[elementType.id] = elementType;
-
-    elementType.render = function(element)
-    {
-      element.$ = $(new EJS({url: '/templates/elementTypes/' + elementType.id}).render(element));
-
-      element.$.attr({
-        'data-id': element.id,
-        'data-top': element.y,
-        'data-left': element.x
-      });
-
-      element.$.css({
-        top: element.y + 'px',
-        left: element.x + 'px'
-      });
-
-      return element.$;
-    };
+    elementTypes[elementType.id] = new ElementType(elementType);
   }
 
   function renderElements(elements)
@@ -334,9 +427,11 @@ $(function()
     }
 
     element.type = elementTypes[element.type];
-    element.type.render(element).appendTo($canvas);
+    element.type.renderElement(element).appendTo($canvas);
 
     jsPlumb.draggable(element.$, dragOptions);
+
+    element.type.addEndpoints(element);
 
     elements[element.id] = element;
   }
@@ -475,7 +570,7 @@ $(function()
 
   $canvas.xselectable({
     filter: '.element',
-    cancel: '.element',
+    cancel: '.element, .element-endpoint',
     selectedCssClass: SELECTED_ELEMENT_CLASS,
     boxCssClass: 'editor-selection-box'
   });

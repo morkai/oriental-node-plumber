@@ -3,6 +3,7 @@
   top: 0;
   left: -9999px;
 }
+
 .element {
   position: absolute;
   top: 0;
@@ -19,20 +20,40 @@
 .element-selected {
   outline-color: #00BFFF;
 }
+
+.element-endpoint.element-endpoint-hover circle {
+  fill: #0BF;
+}
+.element-endpoint.element-endpoint-valid circle {
+  fill: #F90;
+}
+.element-endpoint.element-endpoint-accept circle {
+  fill: #8C0;
+}
+
+.element-connection path {
+  stroke-width: 2;
+}
+.element-connection-hover path {
+  stroke: #0BF;
+}
+
 .element-rect,
 .element-circle {
   width: 78px;
   height: 78px;
-  background: whiteSmoke;
-  text-shadow: 0 1px 1px #FFF;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  background: #FFF;
+  text-shadow: 0 1px 1px #DDD;
   display: table;
-  border: 1px solid #C5C5C5;
-  border-color: rgba(0, 0, 0, 0.15) rgba(0, 0, 0, 0.15) rgba(0, 0, 0, 0.25);
+  border: 2px solid #456;
+}
+.element-circle {
+  border-radius: 40px;
 }
 .element-rect:hover,
 .element-circle:hover {
-  background: #E6E6E6;
+  background: #F5F5F5;
+  text-shadow: 0 1px 1px #FFF;
 }
 .element-rect p,
 .element-circle p {
@@ -43,6 +64,7 @@
   vertical-align: middle;
   text-align: center;
 }
-.element-circle {
-  border-radius: 40px;
+.element-rect-endpoint circle,
+.element-circle-endpoint circle {
+  fill: #456;
 }
