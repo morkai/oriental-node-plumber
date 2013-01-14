@@ -10,6 +10,8 @@ $(function()
   var GRID = [10, 10];
   var SELECTED_ELEMENT_CLASS = 'element-selected';
 
+  _.noop = function() {};
+
   var socket = io.connect();
   var sockets = {};
   var socketCount = 0;
@@ -34,120 +36,7 @@ $(function()
     return $(new EJS({url: '/templates/' + file}).render(model));
   }
 
-  function getPositionDifference($el, newPosition)
-  {
-    var position = $el.position();
-
-    return {
-      left: newPosition.left - position.left,
-      top: newPosition.top - position.top
-    };
-  }
-
-  function getNewPosition($el, positionDifference)
-  {
-    var position = $el.position();
-
-    position.left += positionDifference.left;
-    position.top += positionDifference.top;
-
-    return position;
-  }
-
-  var emitElementDrag = _.throttle(
-    socket.emit.bind(socket, 'element.drag'),
-    THROTTLE_TIME
-  );
-
-  // TODO: z-index
-  var dragOptions = {
-    cursor: 'move',
-    stack: '.element',
-    scrollSensitivity: 100,
-    grid: [1, 1],
-    start: function(e, ui)
-    {
-      socket.emit(
-        'element.dragStart',
-        $(this).attr('data-id'),
-        ui.position.left,
-        ui.position.top
-      );
-    },
-    drag: function(e, ui)
-    {
-      var el = this;
-      var $el = $(el);
-      var movedElements = [];
-
-      movedElements.push({
-        id: $el.attr('data-id'),
-        left: ui.position.left,
-        top: ui.position.top
-      });
-
-      if (selectedElements.length < 2
-        || selectedElements.indexOf(el) === -1)
-      {
-        emitElementDrag(movedElements);
-
-        return;
-      }
-
-      var positionDifference = getPositionDifference($el, ui.position);
-
-      selectedElements.forEach(function(selectedElement)
-      {
-        if (selectedElement === el)
-        {
-          return;
-        }
-
-        var $selectedElement = $(selectedElement);
-        var newPosition = getNewPosition($selectedElement, positionDifference);
-
-        movedElements.push({
-          id: $selectedElement.attr('data-id'),
-          left: newPosition.left,
-          top: newPosition.top
-        });
-
-        $selectedElement.css({
-          left: newPosition.left + 'px',
-          top: newPosition.top + 'px'
-        });
-      });
-
-      emitElementDrag(movedElements);
-    },
-    stop: function(e, ui)
-    {
-      var $el = $(this);
-
-      socket.emit(
-        'element.dragStop',
-        $el.attr('data-id'),
-        ui.position.left,
-        ui.position.top,
-        function(err)
-        {
-          if (err)
-          {
-            $el.css({
-              left: $el.attr('data-left') + 'px',
-              top: $el.attr('data-top') + 'px'
-            });
-          }
-          else
-          {
-            $el.attr('data-left', ui.position.left);
-            $el.attr('data-top', ui.position.top);
-          }
-        }
-      );
-    }
-  };
-
+  // Editors
   socket.on('screen.join', function(joinedSockets)
   {
     joinedSockets.forEach(function(joinedSocket)
@@ -213,48 +102,202 @@ $(function()
     $editor.attr('data-socketCount', socketCount > 5 ? 5 : socketCount);
   });
 
-  socket.on('element.dragStart', function(sid, rid)
+  // Drag and drop
+  function getPositionDifference($el, newPosition)
   {
-    var element = elements[rid];
+    var position = $el.position();
 
-    element.$.draggable('option', 'disabled', true);
-    element.$.addClass('element-dragged');
-    element.$.css({
-      outlineColor: sockets[sid].color
+    return {
+      left: newPosition.left - position.left,
+      top: newPosition.top - position.top
+    };
+  }
+
+  function getNewPosition($el, positionDifference)
+  {
+    var position = $el.position();
+
+    position.left += positionDifference.left;
+    position.top += positionDifference.top;
+
+    return position;
+  }
+
+  var emitElementDrag = _.throttle(
+    socket.emit.bind(socket, 'element.drag'),
+    THROTTLE_TIME
+  );
+
+  function emitDragEvent(eventName, e, ui, done)
+  {
+    var el = e.target;
+    var $el = $(el);
+    var movedElements = [];
+
+    movedElements.push({
+      id: $el.attr('data-id'),
+      left: ui.position.left,
+      top: ui.position.top
     });
-  });
 
-  socket.on('element.drag', function(movedElements)
+    if (selectedElements.length < 2
+      || selectedElements.indexOf(el) === -1)
+    {
+      if (eventName === 'element.drag')
+      {
+        emitElementDrag(movedElements, done);
+      }
+      else
+      {
+        socket.emit(eventName, movedElements, done);
+      }
+
+      return;
+    }
+
+    var positionDifference = getPositionDifference($el, ui.position);
+
+    selectedElements.forEach(function(selectedElement)
+    {
+      if (selectedElement === el)
+      {
+        return;
+      }
+
+      var $selectedElement = $(selectedElement);
+      var newPosition = getNewPosition($selectedElement, positionDifference);
+
+      movedElements.push({
+        id: $selectedElement.attr('data-id'),
+        left: newPosition.left,
+        top: newPosition.top
+      });
+
+      $selectedElement.css({
+        left: newPosition.left + 'px',
+        top: newPosition.top + 'px'
+      });
+    });
+
+    if (eventName === 'element.drag')
+    {
+      emitElementDrag(movedElements, done);
+    }
+    else
+    {
+      socket.emit(eventName, movedElements, done);
+    }
+  }
+
+  function setElementPositionData(movedElement)
   {
+    var element = elements[movedElement.id];
+
+    if (_.isUndefined(element))
+    {
+      return;
+    }
+
+    element.$.attr({
+      'data-left': movedElement.left,
+      'data-top': movedElement.top
+    });
+  }
+
+  // TODO: z-index
+  var dragOptions = {
+    cursor: 'move',
+    stack: '.element',
+    scrollSensitivity: 100,
+    grid: [1, 1],
+    start: function(e, ui)
+    {
+      emitDragEvent('element.dragStart', e, ui);
+    },
+    drag: function(e, ui)
+    {
+      emitDragEvent('element.drag', e, ui);
+    },
+    stop: function(e, ui)
+    {
+      emitDragEvent('element.dragStop', e, ui, function(err, movedElements)
+      {
+        if (err)
+        {
+          console.error(err);
+        }
+        else
+        {
+          movedElements.forEach(setElementPositionData);
+        }
+      });
+    }
+  };
+
+  socket.on('element.dragStart', function(sid, movedElements)
+  {
+    var color = _.isObject(sockets[sid]) ? sockets[sid].color : SPARE_COLOR;
+
     movedElements.forEach(function(movedElement)
     {
       var element = elements[movedElement.id];
 
-      if (!element)
+      if (_.isUndefined(element))
+      {
+        return;
+      }
+
+      element.$
+        .draggable('option', 'disabled', true)
+        .addClass('element-dragged')
+        .css('outline-color', color);
+    });
+  });
+
+  socket.on('element.drag', function(sid, movedElements)
+  {
+    var color = _.isObject(sockets[sid]) ? sockets[sid].color : SPARE_COLOR;
+
+    movedElements.forEach(function(movedElement)
+    {
+      var element = elements[movedElement.id];
+
+      if (_.isUndefined(element))
       {
         return;
       }
 
       element.$.css({
         left: movedElement.left + 'px',
-        top: movedElement.top + 'px'
+        top: movedElement.top + 'px',
+        outlineColor: color
       });
     });
   });
 
-  socket.on('element.dragStop', function(rid, x, y)
+  socket.on('element.dragStop', function(sid, movedElements)
   {
-    var element = elements[rid];
+    movedElements.forEach(function(movedElement)
+    {
+      var element = elements[movedElement.id];
 
-    element.$.removeClass('element-dragged');
-    element.$.draggable('option', 'disabled', false);
-    element.$.css({
-      left: x + 'px',
-      top: y + 'px',
-      outlineColor: ''
+      if (_.isUndefined(element))
+      {
+        return;
+      }
+
+      element.$
+        .removeClass('element-dragged')
+        .draggable('option', 'disabled', false)
+        .css({
+          left: movedElement.left + 'px',
+          top: movedElement.top + 'px',
+          outlineColor: ''
+        });
     });
   });
 
+  // Canvas
   function addElementType(elementType)
   {
     elementTypes[elementType.id] = elementType;

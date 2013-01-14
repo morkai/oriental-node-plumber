@@ -1,14 +1,17 @@
+var _ = require('lodash');
+var step = require('step');
 var Element = require('./models/Element');
 
 var DEFAULT_SCREEN = 'screen123';
 
+var sockets = app.io.sockets;
 var socketCount = 1;
 
-app.io.sockets.on('connection', function(socket)
+sockets.on('connection', function(socket)
 {
   socket.name = 'Guest #' + socketCount++;
 
-  app.io.sockets.in(DEFAULT_SCREEN).emit(
+  sockets.in(DEFAULT_SCREEN).emit(
     'screen.join',
     [{
       id: socket.id,
@@ -18,7 +21,7 @@ app.io.sockets.on('connection', function(socket)
 
   socket.join(DEFAULT_SCREEN);
 
-  socket.emit('screen.join', app.io.sockets.clients(DEFAULT_SCREEN).map(function(joinedSocket)
+  socket.emit('screen.join', sockets.clients(DEFAULT_SCREEN).map(function(joinedSocket)
   {
     return {
       id: joinedSocket.id,
@@ -28,39 +31,80 @@ app.io.sockets.on('connection', function(socket)
 
   socket.on('disconnect', function()
   {
-    app.io.sockets.emit('screen.leave', socket.id);
+    sockets.in(DEFAULT_SCREEN).emit('screen.leave', socket.id);
   });
 
-  socket.on('element.dragStart', function onDragStart(rid, x, y)
+  socket.on('element.dragStart', function onDragStart(movedElements, done)
   {
-    socket.broadcast.emit('element.dragStart', socket.id, rid);
+    sockets.in(DEFAULT_SCREEN).except(socket.id).emit(
+      'element.dragStart', socket.id, movedElements
+    );
+
+    if (_.isFunction(done))
+    {
+      done();
+    }
   });
 
-  socket.on('element.drag', function onDrag(movedElements)
+  socket.on('element.drag', function onDrag(movedElements, done)
   {
-    socket.broadcast.emit('element.drag', movedElements);
+    sockets.in(DEFAULT_SCREEN).except(socket.id).emit(
+      'element.drag', socket.id, movedElements
+    );
+
+    if (_.isFunction(done))
+    {
+      done();
+    }
   });
 
-  socket.on('element.dragStop', function onDragStop(rid, x, y, done)
+  socket.on('element.dragStop', function onDragStop(movedElements, done)
   {
-    Element.edit(rid, {x: x, y: y}, function(err)
+    var steps = [];
+
+    movedElements.forEach(function(movedElement)
+    {
+      steps.push(function(err)
+      {
+        if (err)
+        {
+          throw err;
+        }
+
+        var data = {
+          x: movedElement.left,
+          y: movedElement.top
+        };
+
+        Element.edit(movedElement.id, data, this);
+      });
+    });
+
+    steps.push(function(err)
     {
       if (err)
       {
-        console.error("Failed to set element position: %s", err.message);
+        console.error("Failed to set elements positions: %s", err.message);
       }
       else
       {
-        socket.broadcast.emit('element.dragStop', rid, x, y);
+        sockets.in(DEFAULT_SCREEN).except(socket.id).emit(
+          'element.dragStop', socket.id, movedElements
+        );
       }
 
-      done(err);
+      if (_.isFunction(done))
+      {
+        done(err, movedElements);
+      }
     });
+
+    step.apply(null, steps);
   });
 
   socket.on('chat.message', function onChatMessage(data)
   {
-    app.io.sockets.in(DEFAULT_SCREEN).emit('chat.message', {
+    sockets.in(DEFAULT_SCREEN).except(socket.id).emit('chat.message', {
       user: socket.id,
       text: data.text
     });
