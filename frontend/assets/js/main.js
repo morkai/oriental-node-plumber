@@ -384,12 +384,7 @@ $(function()
 
   $editors.click(function()
   {
-    $editor.toggleClass('editor-with-chat');
-
-    if ($editor.hasClass('editor-with-chat'))
-    {
-      $chatText.focus();
-    }
+    toggleChat();
   });
 
   function toggleSnapToGrid()
@@ -419,6 +414,21 @@ $(function()
   }
 
   // Selection management
+  $(document.body).on('keydown', function(e)
+  {
+    if (!e.ctrlKey || e.keyCode !== 65 || e.target !== document.body)
+    {
+      return true;
+    }
+
+    selectedElements = $canvas
+      .find('.element')
+      .addClass(SELECTED_ELEMENT_CLASS)
+      .get();
+
+    return false;
+  });
+
   $canvas.on('click', '.element', function(e)
   {
     var el = this;
@@ -481,13 +491,37 @@ $(function()
   });
 
   // Chat
-  var lastMessageUser;
+  var lastChatMessageUser;
+
+  /**
+   * @param {boolean=} state
+   */
+  function toggleChat(state)
+  {
+    if (_.isUndefined(state))
+    {
+      $editor.toggleClass('editor-with-chat');
+    }
+    else if (state)
+    {
+      $editor.addClass('editor-with-chat');
+    }
+    else
+    {
+      $editor.removeClass('editor-with-chat');
+    }
+
+    if ($editor.hasClass('editor-with-chat'))
+    {
+      $chatText.focus();
+    }
+  }
 
   function addChatMessage(data)
   {
-    data.followup = lastMessageUser === data.user;
+    data.followup = lastChatMessageUser === data.user;
 
-    lastMessageUser = data.user;
+    lastChatMessageUser = data.user;
 
     var userSocket = sockets[data.user];
 
@@ -519,6 +553,18 @@ $(function()
       $chatMessages.scrollTop($chatMessages[0].scrollHeight);
     }
   }
+
+  $(document.body).on('keypress', function(e)
+  {
+    if (e.target !== document.body || e.keyCode !== 32)
+    {
+      return true;
+    }
+
+    toggleChat(true);
+
+    return false;
+  });
 
   $chatText.on('keypress', function(e)
   {
