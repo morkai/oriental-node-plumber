@@ -66,7 +66,7 @@
  *   not supported.
  *
  * - Only one 'selected' and 'unselected' event pair is fired at the end of the
- *   selection gesture, pointing to an array of all selected, unselected
+ *   selection gesture, pointing to an array of all new selected and unselected
  *   elements (contrary to jQuery UI plugin firing a separate event for each
  *   selected, unselected item).
  *
@@ -730,10 +730,10 @@
     // Prevent selection from starting on any element matched by
     // or contained within the selector specified by the 'cancel'
     // option.
-    var selector =
-        [data.options.cancel, data.options.cancel + ' *'].join(',');
-    if (!!data.options.cancel &&
-        $(evt.target).is(selector)) {
+    // Taken from jQuery UI
+    if (typeof data.options.cancel === 'string' &&
+        event.target.nodeName &&
+        $(event.target).closest(data.options.cancel).length) {
       return;
     }
 
