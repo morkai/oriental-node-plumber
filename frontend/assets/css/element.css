@@ -37,6 +37,9 @@
 .element-connection-hover path {
   stroke: #0BF;
 }
+.element-connection > path:first-child {
+  pointer-events: visibleStroke;
+}
 
 .element-rect,
 .element-circle {
