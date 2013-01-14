@@ -103,7 +103,7 @@
 			// it used to call clone.  but it would be nice to find some time to look
 			// further at this.
 			this.clone = function() {
-				var o = new Object();
+				var o = {};
 				self.constructor.apply(o, a);
 				return o;
 			};
@@ -4462,14 +4462,13 @@ between this method and jsPlumb.reset).
 
 
 			var makeConnector = function(renderMode, connector, connectorArgs) {
-				var c = new Object();
+				var c = {};
 				jsPlumb.Connectors[connector].apply(c, [connectorArgs]);
 				jsPlumb.ConnectorRenderers[renderMode].apply(c, [connectorArgs]);	
 				return c;
 			};
             
             var documentMouseUp = function(e) {
-                console.log("mouseup");  
                 jsPlumb.CurrentLibrary.unbind(document, "mouseup", documentMouseUp);
             };
 			
@@ -4500,7 +4499,6 @@ between this method and jsPlumb.reset).
                 
                 // bind to mousedown and mouseup, for editing
                 self.connector.bind("mousedown", function(e) {
-                    console.log("mousedown");
                     jsPlumb.CurrentLibrary.bind(document, "mouseup", documentMouseUp);
                 });
 				
@@ -5287,7 +5285,7 @@ between this method and jsPlumb.reset).
 				// the whole world.
 				var argsForClone = jsPlumb.extend({}, endpointArgs);						
 				_endpoint.clone = function() {
-					var o = new Object();
+					var o = {};
 					_endpoint.constructor.apply(o, [argsForClone]);
 					return o;
 				};
