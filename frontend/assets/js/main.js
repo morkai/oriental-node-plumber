@@ -573,14 +573,19 @@ $(function()
       return;
     }
 
-    socket.emit('chat.message', {
-      text: this.value
-    });
+    var text = this.value.trim();
 
-    addChatMessage({
-      user: socket.socket.sessionid,
-      text: this.value
-    });
+    if (text.length > 0)
+    {
+      socket.emit('chat.message', {
+        text: text
+      });
+
+      addChatMessage({
+        user: socket.socket.sessionid,
+        text: text
+      });
+    }
 
     this.value = '';
 
