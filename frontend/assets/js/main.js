@@ -515,6 +515,10 @@ $(function()
     {
       $chatText.focus();
     }
+    else
+    {
+      document.body.click();
+    }
   }
 
   function addChatMessage(data)
@@ -554,26 +558,9 @@ $(function()
     }
   }
 
-  $(document.body).on('keypress', function(e)
+  function sendChatMessage(text)
   {
-    if (e.target !== document.body || e.keyCode !== 32)
-    {
-      return true;
-    }
-
-    toggleChat(true);
-
-    return false;
-  });
-
-  $chatText.on('keypress', function(e)
-  {
-    if (e.keyCode !== 13)
-    {
-      return;
-    }
-
-    var text = this.value.trim();
+    text = text.trim();
 
     if (text.length > 0)
     {
@@ -587,9 +574,37 @@ $(function()
       });
     }
 
-    this.value = '';
+    $chatText.val('');
+  }
+
+  $(document.body).on('keypress', function(e)
+  {
+    if (e.currentTarget !== document.body || e.keyCode !== 32)
+    {
+      return true;
+    }
+
+    toggleChat(true);
 
     return false;
+  });
+
+  $chatText.on('keydown', function(e)
+  {
+    if (e.keyCode === 27)
+    {
+      toggleChat(false);
+
+      return false;
+    }
+    if (e.keyCode === 13)
+    {
+      sendChatMessage(this.value);
+
+      return false;
+    }
+
+    return true;
   });
 
   socket.on('chat.message', function(data)
