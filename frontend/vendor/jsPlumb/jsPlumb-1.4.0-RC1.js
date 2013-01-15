@@ -4503,7 +4503,6 @@ between this method and jsPlumb.reset).
 			};
             
             var documentMouseUp = function(e) {
-                console.log("mouseup");  
                 jsPlumb.CurrentLibrary.unbind(document, "mouseup", documentMouseUp);
             };
 			
@@ -4542,7 +4541,6 @@ between this method and jsPlumb.reset).
                     //var    p = self.connector.findSegmentForPoint(x - o.left, y - o.top);
                     self.connector.editStart(x - o.left, y - o.top);
                     
-                    console.log("mousedown", x, y, o);
                     jsPlumb.CurrentLibrary.bind(document, "mouseup", documentMouseUp);
                 });				
                 
