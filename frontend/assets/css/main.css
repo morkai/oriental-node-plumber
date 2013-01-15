@@ -3,12 +3,14 @@
 @import "element.css";
 @import "zIndex.css";
 
+._jsPlumb_endpoint_floating {
+  visibility: hidden;
+}
+
 body {
   cursor: default;
 }
 .navbar .brand {
   margin-left: 0;
 }
-._jsPlumb_endpoint_floating {
-  visibility: hidden;
-}
+

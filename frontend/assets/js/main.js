@@ -25,6 +25,7 @@ $(function()
   var $chatUsers = $editor.find('.editor-chat-users');
   var $chatMessages = $editor.find('.editor-chat-messages');
   var $chatText = $editor.find('.editor-chat-text');
+  var $currentConnector = $toolbar.find('.editor-toolbar-connector');
 
   var elementTypes = {};
   var elements = {};
@@ -452,6 +453,58 @@ $(function()
   });
 
   // Editor toolbar
+  $toolbar.find('[data-tooltip]').tooltip({
+    container: document.body,
+    placement: 'top'
+  });
+
+  $toolbar.find('.editor-toolbar-connector-values').on('click', 'a', function(e)
+  {
+    var $selectedConnector = $(this);
+    var connectorType = $selectedConnector.attr('data-value');
+
+    $currentConnector
+      .val(connectorType)
+      .html('<i class="icon-curve-' + connectorType + '"></i>');
+
+    var connector = [];
+
+    switch (connectorType)
+    {
+      case 'bezier':
+        connector = 'Bezier';
+        break;
+
+      case 'straight':
+        connector = 'Straight';
+        break;
+
+      case 'flowchart':
+        connector = ['Flowchart', {stub: 30}];
+        break;
+
+      case 'state-machine':
+        connector = 'StateMachine';
+        break;
+    }
+
+    jsPlumb.Defaults.Connector = connector;
+
+    e.preventDefault();
+  });
+
+  $currentConnector.on('click', function()
+  {
+    if ($currentConnector.hasClass('disabled'))
+    {
+      return;
+    }
+
+    var newConnectorType = $currentConnector.val();
+
+    console.log('Change a type of the selected connection to: %s', newConnectorType);
+  });
+
   $toolbar.find('.editor-toolbar-snap').on('click', function()
   {
     _.defer(toggleSnapToGrid);

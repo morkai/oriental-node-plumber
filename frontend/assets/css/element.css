@@ -33,6 +33,7 @@
 
 .element-connection path {
   stroke-width: 2;
+  stroke: #456;
 }
 .element-connection > path:first-child {
   pointer-events: visibleStroke;

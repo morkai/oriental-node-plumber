@@ -10,6 +10,41 @@
   z-index: 10000;
   position: relative;
 }
+.editor-toolbar-connector-values i {
+  margin-right: .5em;
+}
+.icon-curve-bezier {
+  background-image: url(../img/curve-bezier.png);
+  background-position: 0 0;
+}
+.icon-curve-straight {
+  background-image: url(../img/curve-straight.png);
+  background-position: 0 0;
+}
+.icon-curve-flowchart {
+  background-image: url(../img/curve-flowchart.png);
+  background-position: 0 0;
+}
+.icon-curve-state-machine {
+  background-image: url(../img/curve-state-machine.png);
+  background-position: 0 0;
+}
+.editor-toolbar-connector-values a:hover .icon-curve-bezier {
+  background-image: url(../img/curve-bezier-white.png)!important;
+  background-position: 0 0!important;
+}
+.editor-toolbar-connector-values a:hover .icon-curve-straight {
+  background-image: url(../img/curve-straight-white.png)!important;
+  background-position: 0 0!important;
+}
+.editor-toolbar-connector-values a:hover .icon-curve-flowchart {
+  background-image: url(../img/curve-flowchart-white.png)!important;
+  background-position: 0 0!important;
+}
+.editor-toolbar-connector-values a:hover .icon-curve-state-machine {
+  background-image: url(../img/curve-state-machine-white.png)!important;
+  background-position: 0 0!important;
+}
 .editor-editors {
   font-size: 14px;
   line-height: 20px;
