@@ -1,6 +1,6 @@
 $(function()
 {
-  var THROTTLE_TIME = 1000 / 60;
+  var DRAG_THROTTLE_TIME = 1000 / 60;
   var SOCKET_COLORS = [
     '#8C0', '#F00', '#F90', '#FFEF00',
     'violet', '#444', '#177245', '#08C', '#800020'
@@ -114,56 +114,38 @@ $(function()
   });
 
   // Drag and drop
-  function getPositionDifference($el, newPosition)
-  {
-    var position = $el.position();
 
-    return {
-      left: newPosition.left - position.left,
-      top: newPosition.top - position.top
-    };
-  }
-
-  function getNewPosition($el, positionDifference)
-  {
-    var position = $el.position();
-
-    position.left += positionDifference.left;
-    position.top += positionDifference.top;
-
-    return position;
-  }
-
-  var emitElementDrag = _.throttle(
+  var sendElementDrag = _.throttle(
     socket.emit.bind(socket, 'element.drag'),
-    THROTTLE_TIME
+    DRAG_THROTTLE_TIME
   );
 
-  function emitDragEvent(eventName, e, ui, done)
+  function emitDraggableEvent(eventName, e, ui, done)
   {
-    var el = e.target;
-    var $el = $(el);
-    var movedElements = [];
-    var positionDifference = getPositionDifference($el, ui.position);
     var isDrag = eventName === 'element.drag';
 
-    if (isDrag && positionDifference.left === 0 && positionDifference.top === 0)
+    var el = e.target;
+    var $el = $(el);
+    var position = $el.position();
+    var positionLeftDifference = ui.position.left - position.left;
+    var positionTopDifference = ui.position.top - position.top;
+
+    if (isDrag && positionLeftDifference === 0 && positionTopDifference === 0)
     {
       return;
     }
 
-    movedElements.push({
-      id: $el.attr('data-id'),
-      left: ui.position.left,
-      top: ui.position.top
-    });
+    var movedElements = [
+      $el.attr('data-id'),
+      ui.position.left,
+      ui.position.top
+    ];
 
-    if (selectedElements.length < 2
-      || selectedElements.indexOf(el) === -1)
+    if (selectedElements.length < 2 || !_.contains(selectedElements, el))
     {
       if (isDrag)
       {
-        emitElementDrag(movedElements, done);
+        sendElementDrag(movedElements, done);
       }
       else
       {
@@ -175,21 +157,26 @@ $(function()
 
     var elementsToRepaint = [];
 
-    selectedElements.forEach(function(selectedElement)
+    for (var i = 0, l = selectedElements.length; i < l; ++i)
     {
+      var selectedElement = selectedElements[i];
+
       if (selectedElement === el)
       {
-        return;
+        continue;
       }
 
       var $selectedElement = $(selectedElement);
-      var newPosition = getNewPosition($selectedElement, positionDifference);
+      var newPosition = $selectedElement.position();
 
-      movedElements.push({
-        id: $selectedElement.attr('data-id'),
-        left: newPosition.left,
-        top: newPosition.top
-      });
+      newPosition.left += positionLeftDifference;
+      newPosition.top += positionTopDifference;
+
+      movedElements.push(
+        $selectedElement.attr('data-id'),
+        newPosition.left,
+        newPosition.top
+      );
 
       $selectedElement.css({
         left: newPosition.left + 'px',
@@ -197,11 +184,11 @@ $(function()
       });
 
       elementsToRepaint.push($selectedElement);
-    });
+    }
 
     if (isDrag)
     {
-      emitElementDrag(movedElements, done);
+      sendElementDrag(movedElements, done);
     }
     else
     {
@@ -234,15 +221,15 @@ $(function()
     grid: [1, 1],
     start: function(e, ui)
     {
-      emitDragEvent('element.dragStart', e, ui);
+      emitDraggableEvent('element.dragStart', e, ui);
     },
     drag: function(e, ui)
     {
-      emitDragEvent('element.drag', e, ui);
+      emitDraggableEvent('element.drag', e, ui);
     },
     stop: function(e, ui)
     {
-      emitDragEvent('element.dragStop', e, ui, function(err, movedElements)
+      emitDraggableEvent('element.dragStop', e, ui, function(err, movedElements)
       {
         if (err)
         {
@@ -261,26 +248,26 @@ $(function()
     var color = _.isObject(sockets[sid]) ? sockets[sid].color : SPARE_COLOR;
     var elementsToRepaint = [];
 
-    movedElements.forEach(function(movedElement)
+    for (var i = 0, l = movedElements.length; i < l; i += 3)
     {
-      var element = elements[movedElement.id];
+      var element = elements[movedElements[i]];
 
       if (_.isUndefined(element))
       {
-        return;
+        continue;
       }
 
       element.$
         .draggable('option', 'disabled', true)
         .addClass('element-dragged')
         .css({
-          left: movedElement.left + 'px',
-          top: movedElement.top + 'px',
+          left: movedElements[i + 1] + 'px',
+          top: movedElements[i + 2] + 'px',
           outlineColor: color
         });
 
       elementsToRepaint.push(element.$);
-    });
+    }
 
     jsPlumb.repaint(elementsToRepaint);
   });
@@ -290,9 +277,9 @@ $(function()
     var color = _.isObject(sockets[sid]) ? sockets[sid].color : SPARE_COLOR;
     var elementsToRepaint = [];
 
-    movedElements.forEach(function(movedElement)
+    for (var i = 0, l = movedElements.length; i < l; i += 3)
     {
-      var element = elements[movedElement.id];
+      var element = elements[movedElements[i]];
 
       if (_.isUndefined(element))
       {
@@ -300,13 +287,13 @@ $(function()
       }
 
       element.$.css({
-        left: movedElement.left + 'px',
-        top: movedElement.top + 'px',
+        left: movedElements[i + 1] + 'px',
+        top: movedElements[i + 2] + 'px',
         outlineColor: color
       });
 
       elementsToRepaint.push(element.$);
-    });
+    }
 
     jsPlumb.repaint(elementsToRepaint);
   });
@@ -315,9 +302,9 @@ $(function()
   {
     var elementsToRepaint = [];
 
-    movedElements.forEach(function(movedElement)
+    for (var i = 0, l = movedElements.length; i < l; i += 3)
     {
-      var element = elements[movedElement.id];
+      var element = elements[movedElements[i]];
 
       if (_.isUndefined(element))
       {
@@ -326,15 +313,15 @@ $(function()
 
       element.$
         .css({
-          left: movedElement.left + 'px',
-          top: movedElement.top + 'px',
+          left: movedElements[i + 1] + 'px',
+          top: movedElements[i + 2] + 'px',
           outlineColor: ''
         })
         .removeClass('element-dragged')
         .draggable('option', 'disabled', false);
 
       elementsToRepaint.push(element.$);
-    });
+    }
 
     jsPlumb.repaint(elementsToRepaint);
   });

@@ -62,23 +62,26 @@ sockets.on('connection', function(socket)
   {
     var steps = [];
 
-    movedElements.forEach(function(movedElement)
+    for (var i = 0, l = movedElements.length; i < l; i += 3)
     {
-      steps.push(function(err)
+      (function(id, left, top)
       {
-        if (err)
+        steps.push(function(err)
         {
-          throw err;
-        }
+          if (err)
+          {
+            throw err;
+          }
 
-        var data = {
-          x: movedElement.left,
-          y: movedElement.top
-        };
+          var data = {
+            x: left,
+            y: top
+          };
 
-        Element.edit(movedElement.id, data, this);
-      });
-    });
+          Element.edit(id, data, this);
+        });
+      })(movedElements[i], movedElements[i + 1], movedElements[i + 2]);
+    }
 
     steps.push(function(err)
     {
