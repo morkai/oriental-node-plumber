@@ -484,6 +484,8 @@ $(function()
   $editors.click(function()
   {
     toggleChat();
+
+    return false;
   });
 
   function toggleSnapToGrid()
@@ -616,7 +618,7 @@ $(function()
     }
     else
     {
-      document.body.click();
+      $editors.focus();
     }
   }
 
@@ -678,14 +680,15 @@ $(function()
 
   $(document.body).on('keypress', function(e)
   {
-    if (e.currentTarget !== document.body || e.keyCode !== 32)
+    if (e.keyCode === 32 &&
+      (e.target === document.body || e.target === $editors[0]))
     {
-      return true;
+      toggleChat(true);
+
+      return false;
     }
 
-    toggleChat(true);
-
-    return false;
+    return true;
   });
 
   $chatText.on('keydown', function(e)
