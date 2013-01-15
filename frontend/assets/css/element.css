@@ -34,11 +34,11 @@
 .element-connection path {
   stroke-width: 2;
 }
-.element-connection-hover path {
-  stroke: #0BF;
-}
 .element-connection > path:first-child {
   pointer-events: visibleStroke;
+}
+.element-connection-hover path {
+  stroke: #0BF;
 }
 
 .element-rect,
@@ -55,8 +55,7 @@
 }
 .element-rect:hover,
 .element-circle:hover {
-  background: #F5F5F5;
-  text-shadow: 0 1px 1px #FFF;
+  border-color: #0BF;
 }
 .element-rect p,
 .element-circle p {
