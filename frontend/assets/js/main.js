@@ -37,6 +37,17 @@ $(function()
   }
 
   // Editors
+  socket.on('connect', function()
+  {
+    $editorsBadges.empty();
+    $chatUsers.empty();
+
+    socketCount = 0;
+
+    $editorsCount.text('No');
+    $editor.attr('data-socketCount', 0);
+  });
+
   socket.on('screen.join', function(joinedSockets)
   {
     joinedSockets.forEach(function(joinedSocket)
