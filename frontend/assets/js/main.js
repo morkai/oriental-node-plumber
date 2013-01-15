@@ -680,7 +680,7 @@ $(function()
 
   $(document.body).on('keypress', function(e)
   {
-    if (e.keyCode === 32 &&
+    if (e.which === 32 &&
       (e.target === document.body || e.target === $editors[0]))
     {
       toggleChat(true);
@@ -693,13 +693,13 @@ $(function()
 
   $chatText.on('keydown', function(e)
   {
-    if (e.keyCode === 27)
+    if (e.which === 27)
     {
       toggleChat(false);
 
       return false;
     }
-    if (e.keyCode === 13)
+    if (e.which === 13)
     {
       sendChatMessage(this.value);
 
