@@ -732,8 +732,8 @@
     // option.
     // Taken from jQuery UI
     if (typeof data.options.cancel === 'string' &&
-        event.target.nodeName &&
-        $(event.target).closest(data.options.cancel).length) {
+        evt.target.nodeName &&
+        $(evt.target).closest(data.options.cancel).length) {
       return;
     }
 
