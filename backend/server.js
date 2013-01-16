@@ -1,25 +1,9 @@
 var http = require('http');
 var express = require('express');
-var orientdb = require('orientdb');
 
 app = express();
 
-app.db = new orientdb.GraphDb(
-  'plumber',
-  new orientdb.Server({host: '127.0.0.1', port: 2424}),
-  {user_name: 'plumber', user_password: 'nohax'}
-);
-
-app.db.open(function(err)
-{
-  if (err)
-  {
-    console.error("Failed to connect to the database: %s", err);
-    process.exit(1);
-  }
-
-  console.log("Connected to the database");
-});
+require('./db');
 
 app.httpServer = http.createServer(app);
 app.httpServer.listen(3000, function()
