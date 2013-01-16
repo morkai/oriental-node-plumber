@@ -364,13 +364,13 @@ $(function()
 
     element.$.attr({
       'data-id': element.id,
-      'data-top': element.y,
-      'data-left': element.x
+      'data-top': element.top,
+      'data-left': element.left
     });
 
     element.$.css({
-      top: element.y + 'px',
-      left: element.x + 'px'
+      top: element.top + 'px',
+      left: element.left + 'px'
     });
 
     return element.$;

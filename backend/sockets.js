@@ -74,8 +74,8 @@ sockets.on('connection', function(socket)
           }
 
           var data = {
-            x: left,
-            y: top
+            left: left,
+            top: top
           };
 
           Element.edit(id, data, this);
