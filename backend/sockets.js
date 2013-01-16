@@ -12,7 +12,7 @@ sockets.on('connection', function(socket)
   socket.name = 'Guest #' + socketCount++;
 
   sockets.in(DEFAULT_SCREEN).emit(
-    'screen.join',
+    'screen.joined',
     [{
       id: socket.id,
       name: socket.name
@@ -21,23 +21,25 @@ sockets.on('connection', function(socket)
 
   socket.join(DEFAULT_SCREEN);
 
-  socket.emit('screen.join', sockets.clients(DEFAULT_SCREEN).map(function(joinedSocket)
-  {
-    return {
-      id: joinedSocket.id,
-      name: joinedSocket.name
-    };
-  }));
+  socket.emit('screen.joined',
+    sockets.clients(DEFAULT_SCREEN).map(function(joinedSocket)
+    {
+      return {
+        id: joinedSocket.id,
+        name: joinedSocket.name
+      };
+    })
+  );
 
   socket.on('disconnect', function()
   {
-    sockets.in(DEFAULT_SCREEN).emit('screen.leave', socket.id);
+    sockets.in(DEFAULT_SCREEN).emit('screen.left', socket.id);
   });
 
   socket.on('element.dragStart', function onDragStart(movedElements, done)
   {
     sockets.in(DEFAULT_SCREEN).except(socket.id).emit(
-      'element.dragStart', socket.id, movedElements
+      'element.dragStarted', socket.id, movedElements
     );
 
     if (_.isFunction(done))
@@ -49,7 +51,7 @@ sockets.on('connection', function(socket)
   socket.on('element.drag', function onDrag(movedElements, done)
   {
     sockets.in(DEFAULT_SCREEN).except(socket.id).emit(
-      'element.drag', socket.id, movedElements
+      'element.dragged', socket.id, movedElements
     );
 
     if (_.isFunction(done))
@@ -87,12 +89,13 @@ sockets.on('connection', function(socket)
     {
       if (err)
       {
-        console.error("Failed to set elements positions: %s", err.message);
+        // TODO Inform clients that dragging failed so they can re-enable the elements
+        console.error("Failed to set elements positions: %s", err.stack);
       }
       else
       {
         sockets.in(DEFAULT_SCREEN).except(socket.id).emit(
-          'element.dragStop', socket.id, movedElements
+          'element.dragStopped', socket.id, movedElements
         );
       }
 
@@ -107,9 +110,8 @@ sockets.on('connection', function(socket)
 
   socket.on('chat.message', function onChatMessage(data)
   {
-    sockets.in(DEFAULT_SCREEN).except(socket.id).emit('chat.message', {
-      user: socket.id,
-      text: data.text
-    });
+    sockets.in(DEFAULT_SCREEN).except(socket.id).emit(
+      'chat.messaged', socket.id, data.text
+    );
   });
 });

@@ -11,12 +11,6 @@
 <div class="navbar navbar-fixed-top">
   <div class="navbar-inner">
     <a class="brand" href="/">Oriental Node Plumber</a>
-    <!--
-    <ul class="nav">
-      <li class="active"><a href="#">Home</a></li>
-      <li><a href="#">Link</a></li>
-    </ul>
-    //-->
   </div>
 </div>
 <div class="editor" data-socketCount="0">
@@ -25,16 +19,16 @@
       <button class="btn" data-tooltip title="Run action X">X</button>
     </div>
     <div class="btn-group">
-      <button class="btn active editor-toolbar-snap" data-toggle="button" data-tooltip title="Toggle snap to grid">Snap</button>
-      <button class="btn active editor-toolbar-grid" data-toggle="button" data-tooltip title="Toggle grid">Grid</button>
+      <button class="btn editor-toolbar-snap" data-toggle="button" data-tooltip title="Toggle snap to grid">Snap</button>
+      <button class="btn editor-toolbar-grid" data-toggle="button" data-tooltip title="Toggle grid">Grid</button>
       <button class="btn dropdown-toggle" data-toggle="dropdown" data-tooltip title="Choose grid size"><span class="caret"></span></button>
-      <ul class="dropdown-menu editor-toolbar-grid-sizes">
-        <li><a href="#" data-size="10x10">10x10 px</a>
-        <li><a href="#" data-size="20x20">20x20 px</a>
-        <li><a href="#" data-size="50x50">50x50 px</a>
-        <li><a href="#" data-size="100x100">100x100 px</a>
+      <ul class="dropdown-menu editor-toolbar-grid-values">
+        <li><a href="#" data-value="10x10">10x10 px</a>
+        <li><a href="#" data-value="20x20">20x20 px</a>
+        <li><a href="#" data-value="50x50">50x50 px</a>
+        <li><a href="#" data-value="100x100">100x100 px</a>
         <li class="divider">
-        <li><a href="#" data-size="0x0">Custom...</a>
+        <li><a href="#" data-value="0x0">Custom...</a>
       </ul>
     </div>
     <div class="btn-group">
@@ -84,6 +78,17 @@
 <script src="/vendor/jsPlumb/jsPlumb-connectors-statemachine-1.4.0-RC1.js"></script>
 <script src="/vendor/jsPlumb/jsPlumb-connectors-flowchart-1.4.0-RC1.js"></script>
 <script src="/vendor/jsPlumb/jsPlumb-renderers-svg-1.4.0-RC1.js"></script>
-<script src="/vendor/jsPlumb/jquery.jsPlumb-1.4.0-RC1.js"></script><script src="/assets/js/main.js"></script>
+<script src="/vendor/jsPlumb/jquery.jsPlumb-1.4.0-RC1.js"></script>
+<script src="/assets/js/main.js"></script>
+<script src="/assets/js/pubsub.js"></script>
+<script src="/assets/js/socket.js"></script>
+<script src="/assets/js/screen.js"></script>
+<script src="/assets/js/chat.js"></script>
+<script src="/assets/js/editor.js"></script>
+<script src="/assets/js/editor.selection.js"></script>
+<script src="/assets/js/editor.dnd.js"></script>
+<script src="/assets/js/ElementType.js"></script>
+<script src="/assets/js/ElementType.Endpoint.js"></script>
+<script src="/assets/js/Element.js"></script>
 </body>
 </html>

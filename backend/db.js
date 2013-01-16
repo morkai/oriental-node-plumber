@@ -20,12 +20,16 @@ var schema = {
     name: {
       type: 'string',
       mandatory: true,
-      notNull: true
+      notNull: true,
+      min: 1,
+      max: 200
     },
     type: {
       type: 'string',
       mandatory: true,
-      notNull: true
+      notNull: true,
+      min: 1,
+      max: 50
     },
     top: {
       type: 'short',
@@ -36,6 +40,30 @@ var schema = {
       type: 'short',
       mandatory: true,
       notNull: true
+    }
+  },
+  Connection: {
+    extends: 'OGraphEdge',
+    type: {
+      type: 'string',
+      mandatory: true,
+      notNull: true,
+      min: 1,
+      max: 50
+    },
+    source: {
+      type: 'string',
+      mandatory: true,
+      notNull: true,
+      min: 1,
+      max: 50
+    },
+    target: {
+      type: 'string',
+      mandatory: true,
+      notNull: true,
+      min: 1,
+      max: 50
     }
   }
 };

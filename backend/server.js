@@ -1,5 +1,8 @@
 var http = require('http');
+var _ = require('lodash');
 var express = require('express');
+
+_.noop = function() {};
 
 app = express();
 
@@ -15,6 +18,8 @@ app.io = require('socket.io').listen(app.httpServer, {
   log: false
 });
 
+require('./sockets');
+
 app.set('static directory', __dirname + '/../frontend');
 app.set('views', __dirname + '/templates');
 app.set('view engine', 'ejs');
@@ -25,7 +30,10 @@ app.use(express.static(app.get('static directory')));
 
 app.configure('development', function()
 {
-  app.use(express.errorHandler({dumpExceptions: true, showStack: true}));
+  app.use(express.errorHandler({
+    dumpExceptions: true,
+    showStack: true
+  }));
 });
 
 app.configure('production', function()
@@ -34,4 +42,3 @@ app.configure('production', function()
 });
 
 require('./routes');
-require('./sockets');

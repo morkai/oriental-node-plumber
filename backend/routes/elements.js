@@ -1,12 +1,17 @@
+var toJSON = require('../util/orient').toJSON;
 var Element = require('../models/Element');
 
 app.get('/elements', function(req, res, next)
 {
-  Element.getAll(function(err, elements)
+  var getter = req.query.connections === '1'
+    ? 'getAllWithConnections'
+    : 'getAll';
+
+  Element[getter](function(err, elements)
   {
     if (err) return next(err);
 
-    return res.send(elements.map(Element.toJSON));
+    return res.send(elements.map(toJSON));
   });
 });
 
@@ -16,7 +21,7 @@ app.post('/elements', function(req, res, next)
   {
     if (err) return next(err);
 
-    return res.send(Element.toJSON(element));
+    return res.send(toJSON(element));
   });
 });
 
@@ -28,7 +33,7 @@ app.get('/elements/:id', function(req, res, next)
 
     if (!element) return res.send(404);
 
-    return res.send(Element.toJSON(element));
+    return res.send(toJSON(element));
   });
 });
 
@@ -40,7 +45,7 @@ app.put('/elements/:id', function(req, res, next)
 
     if (err) return next(err);
 
-    return res.send(element);
+    return res.send(toJSON(element));
   });
 });
 

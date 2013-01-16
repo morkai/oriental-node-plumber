@@ -38,3 +38,4 @@ app.get('/grid.svg', function(req, res)
 
 require('./elementTypes');
 require('./elements');
+require('./connections');
