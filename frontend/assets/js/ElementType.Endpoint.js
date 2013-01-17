@@ -8,7 +8,7 @@
       {
         var endpoint = jsPlumb.getEndpoint($(this).attr('data-uuid'));
 
-        return endpoint && !endpoint.isFull();
+        return !endpoint || !endpoint.isFull();
       }
     },
     hoverClass: 'element-endpoint-hover',
