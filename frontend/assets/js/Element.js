@@ -38,7 +38,7 @@
     this.name = data.name;
 
     /**
-     * @type {ElementType}
+     * @type {app.ElementType}
      */
     this.type = data.type;
 
@@ -53,9 +53,14 @@
     this.top = data.top;
 
     /**
-     * @type {Array.<Connection>}
+     * @type {Array.<app.Connection>}
      */
     this.out = data.out;
+
+    /**
+     * @type {Array.<app.Connection>}
+     */
+    this.in = data.in;
 
     /**
      * @type {Object.<String, jsPlumb.Endpoint>}

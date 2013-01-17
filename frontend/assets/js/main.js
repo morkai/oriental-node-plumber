@@ -27,6 +27,8 @@ _.noop = function() {};
 
   $(function()
   {
+    var connectionsData = [];
+
     var $editor = $('.editor');
     var $canvas = $editor.find('.editor-canvas');
 
@@ -40,14 +42,13 @@ _.noop = function() {};
     {
       return list.map(function(data)
       {
-        return data instanceof app.ElementType.Endpoint
-          ? data
-          : new app.ElementType.Endpoint(data);
+        return data instanceof type ? data : new type(data);
       });
     }
 
     /**
      * @param {Object} data
+     * @return {app.ElementType}
      */
     function addElementType(data)
     {
@@ -55,42 +56,101 @@ _.noop = function() {};
         ? createOrReturn(app.ElementType.Endpoint, data.endpoints)
         : [];
 
-      app.elementTypes[data.id] = new app.ElementType(data);
+      var elementType = new app.ElementType(data);
+
+      app.elementTypes[data.id] = elementType;
+
+      return elementType;
     }
 
     /**
      * @param {Object} data
+     * @return {app.Element}
+     * @throws {Error}
      */
     function addElement(data)
     {
-      if (typeof data.type === 'string')
+      var type = data.type;
+
+      if (typeof type === 'string')
       {
-        data.type = app.elementTypes[data.type];
+        data.type = app.elementTypes[type];
       }
+
+      if (!(data.type instanceof app.ElementType))
+      {
+        throw new Error("Unknown element type: " + type);
+      }
+
+      if (Array.isArray(data.out) && data.out.length > 0)
+      {
+        connectionsData.push.apply(connectionsData, data.out);
+      }
+
+      data.out = [];
+      data.in = [];
 
       var element = new app.Element(data);
 
       app.elements[element.id] = element;
 
-      element.render($canvas);
+      return element;
+    }
+
+    /**
+     * @param {Object} data
+     * @return {app.Connection}
+     * @throws {Error}
+     */
+    function addConnection(data)
+    {
+      var outElement = _.isString(data.out) ? app.elements[data.out] : data.out;
+
+      if (_.isUndefined(outElement))
+      {
+        throw new Error("Unknown element: " + data.out);
+      }
+
+      var inElement = _.isString(data.in) ? app.elements[data.in] : data.in;
+
+      if (_.isUndefined(inElement))
+      {
+        throw new Error("Unknown element: " + data.in);
+      }
+
+      data.out = outElement;
+      data.in = inElement;
+
+      var connection = new app.Connection(data);
+
+      app.connections[connection.id] = connection;
+
+      outElement.out.push(connection);
+      inElement.in.push(connection);
+
+      return connection;
     }
 
     var loadElementTypesReq = $.ajax({
       url: '/elementTypes',
-      success: function(data)
+      success: function(elementTypesData)
       {
-        data.forEach(addElementType);
+        elementTypesData.forEach(addElementType);
       }
     });
 
     var loadElementsReq = $.ajax({
       url: '/elements',
       data: {connections: 1},
-      success: function(data)
+      success: function(elementsData)
       {
         loadElementTypesReq.then(function()
         {
-          data.forEach(addElement);
+          elementsData.forEach(addElement);
+          connectionsData.forEach(addConnection);
+          connectionsData = null;
+
+          _.invoke(app.elements, 'render', $canvas);
         });
       }
     });
