@@ -75,11 +75,6 @@ _.noop = function() {};
       element.render($canvas);
     }
 
-    app.subscribe('screen.recounted', function(newCount)
-    {
-      $editor.attr('data-socketCount', newCount > 5 ? 5 : newCount);
-    });
-
     var loadElementTypesReq = $.ajax({
       url: '/elementTypes',
       success: function(data)

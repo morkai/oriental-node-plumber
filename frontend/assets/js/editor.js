@@ -114,6 +114,11 @@
   app.subscribe('editor.grid.toggled', updateGrid);
   app.subscribe('editor.grid.sizeChanged', updateGrid);
 
+  app.subscribe('screen.recounted', function(newCount)
+  {
+    editor.$editor.attr('data-userCount', newCount > 5 ? 5 : newCount);
+  });
+
   $(function()
   {
     editor.$editor = $('.editor');
