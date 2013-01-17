@@ -5,7 +5,13 @@
   var REFERENCE_ENDPOINT_OPTIONS = {
     dropOptions: {
       hoverClass: 'element-endpoint-accept',
-      activeClass: 'element-endpoint-valid'
+      activeClass: 'element-endpoint-valid',
+      accept: function()
+      {
+        var endpoint = jsPlumb.getEndpoint($(this).attr('data-uuid'));
+
+        return !endpoint.isFull();
+      }
     },
     hoverClass: 'element-endpoint-hover',
     connectorClass: 'element-connection',
@@ -73,8 +79,11 @@
         'element-' + this.id + '-endpoint-' + options.id
       ];
 
+      var uuid = _.uniqueId('ee');
+
       var endpoint = jsPlumb.addEndpoint(
         element.$[0], {
+          uuid: uuid,
           isSource: options.source === true,
           isTarget: options.target === true,
           maxConnections: options.maxConnections || 1,
@@ -83,6 +92,8 @@
         },
         REFERENCE_ENDPOINT_OPTIONS
       );
+
+      $(endpoint.canvas).attr('data-uuid', uuid);
 
       element.endpoints[options.id] = endpoint;
     }, this);
