@@ -99,7 +99,7 @@
   background: #F5F5F5;
   height: 8.8em;
   overflow-y: scroll;
-  overflow-x: none;
+  overflow-x: hidden;
   border-bottom: 1px solid #D2D2D2;
   padding: .5em 0 0 .5em;
   z-index: 1;
