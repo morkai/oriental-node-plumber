@@ -40,9 +40,7 @@
     /**
      * @type {ElementType}
      */
-    this.type = data.type instanceof app.ElementType
-      ? data.type
-      : new app.ElementType(data.type);
+    this.type = data.type;
 
     /**
      * @type {Number}
@@ -55,9 +53,9 @@
     this.top = data.top;
 
     /**
-     * @type {jsPlumb.Connection}
+     * @type {Array.<Connection>}
      */
-    this.connections = [];
+    this.out = data.out;
 
     /**
      * @type {Object.<String, jsPlumb.Endpoint>}
@@ -65,7 +63,7 @@
     this.endpoints = {};
 
     /**
-     * @type {jQuery}
+     * @type {jQuery|null}
      */
     this.$ = null;
   }

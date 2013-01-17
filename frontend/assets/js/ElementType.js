@@ -21,14 +21,9 @@
     this.name = data.name;
 
     /**
-     * @type {Array.<Object>}
+     * @type {Array.<ElementType.Endpoint>}
      */
-    this.endpoints = data.endpoints.map(function(data)
-    {
-      return data instanceof app.ElementType.Endpoint
-        ? data
-        : new app.ElementType.Endpoint(data);
-    });
+    this.endpoints = data.endpoints;
   }
 
   /**

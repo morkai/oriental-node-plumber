@@ -31,10 +31,30 @@ _.noop = function() {};
     var $canvas = $editor.find('.editor-canvas');
 
     /**
+     * @private
+     * @param {Function} type
+     * @param {Array.<Object>} list
+     * @return {Array.<Object>}
+     */
+    function createOrReturn(type, list)
+    {
+      return list.map(function(data)
+      {
+        return data instanceof app.ElementType.Endpoint
+          ? data
+          : new app.ElementType.Endpoint(data);
+      });
+    }
+
+    /**
      * @param {Object} data
      */
     function addElementType(data)
     {
+      data.endpoints = Array.isArray(data.endpoints)
+        ? createOrReturn(app.ElementType.Endpoint, data.endpoints)
+        : [];
+
       app.elementTypes[data.id] = new app.ElementType(data);
     }
 
@@ -50,9 +70,9 @@ _.noop = function() {};
 
       var element = new app.Element(data);
 
-      element.render($canvas);
-
       app.elements[element.id] = element;
+
+      element.render($canvas);
     }
 
     app.subscribe('screen.recounted', function(newCount)
