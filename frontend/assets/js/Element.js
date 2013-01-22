@@ -98,6 +98,14 @@
     this.type.addEndpoints(this);
   };
 
+  Element.prototype.renderConnections = function()
+  {
+    for (var i = 0, l = this.out.length; i < l; ++i)
+    {
+      this.out[i].createJsPlumbConnection();
+    }
+  };
+
   /**
    * @param {Number} left
    * @param {Number} top

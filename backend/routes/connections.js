@@ -35,14 +35,31 @@ app.get('/connections/:id', function(req, res, next)
 
 app.put('/connections/:id', function(req, res, next)
 {
-  Connection.edit(req.params.id, req.body, function(err, connection)
+  switch (req.body.action)
   {
-    if (err && err.code === 404) return res.send(404);
+    case 'move':
+      Connection.move(req.params.id, req.body, function(err, connection)
+      {
+        if (err && err.code === 404) return res.send(404);
 
-    if (err) return next(err);
+        if (err) return next(err);
 
-    return res.send(toJSON(connection));
-  });
+        return res.send(toJSON(connection));
+      });
+      break;
+
+    default:
+      Connection.edit(req.params.id, req.body, function(err, connection)
+      {
+        if (err && err.code === 404) return res.send(404);
+
+        if (err) return next(err);
+
+        return res.send(toJSON(connection));
+      });
+      break;
+  }
+
 });
 
 app.del('/connections/:id', function(req, res, next)

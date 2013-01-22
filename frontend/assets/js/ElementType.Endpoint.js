@@ -56,10 +56,10 @@
   }
 
   /**
-   * @param {Element} element
+   * @param {app.Element} element
    * @return {jsPlumb.Endpoint}
    */
-  Endpoint.prototype.createForElement = function(element)
+  Endpoint.prototype.createJsPlumbEndpoint = function(element)
   {
     var elementType = element.type;
 
@@ -78,7 +78,10 @@
         isTarget: this.target,
         maxConnections: this.maxConnections,
         anchor: this.anchor,
-        cssClass: cssClass.join(' ')
+        cssClass: cssClass.join(' '),
+        parameters: {
+          endpointId: this.id
+        }
       },
       REFERENCE_ENDPOINT_OPTIONS
     );

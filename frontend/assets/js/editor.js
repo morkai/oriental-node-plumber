@@ -29,28 +29,8 @@
       return;
     }
 
-    var connector;
-
-    switch (connectorType)
-    {
-      case 'straight':
-        connector = 'Straight';
-        break;
-
-      case 'flowchart':
-        connector = ['Flowchart', {stub: 30}];
-        break;
-
-      case 'state-machine':
-        connector = 'StateMachine';
-        break;
-
-      default:
-        connector = 'Bezier';
-        break;
-    }
-
-    jsPlumb.Defaults.Connector = connector;
+    jsPlumb.Defaults.Connector =
+      app.Connection.getConnectorFromType(connectorType);
 
     app.publish('editor.connectorType.changed', connectorType);
   };

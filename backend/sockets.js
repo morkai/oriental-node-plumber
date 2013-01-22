@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var step = require('step');
+var step = require('two-step');
 var Element = require('./models/Element');
 
 var DEFAULT_SCREEN = 'screen123';
@@ -80,7 +80,7 @@ sockets.on('connection', function(socket)
             top: top
           };
 
-          Element.edit(id, data, this);
+          Element.edit(id, data, this.val());
         });
       })(movedElements[i], movedElements[i + 1], movedElements[i + 2]);
     }

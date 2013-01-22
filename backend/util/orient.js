@@ -2,6 +2,11 @@ var _ = require('lodash');
 
 var ridRegExp = /^#[0-9]+:[0-9]+$/;
 
+exports.isRid = function(value)
+{
+  return typeof value === 'string' && ridRegExp.test(value);
+};
+
 /**
  * @param {Object} document
  * @param {Boolean=true} inArray

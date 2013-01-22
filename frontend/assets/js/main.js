@@ -25,117 +25,176 @@ _.noop = function() {};
     return $(new EJS({url: '/templates/' + file}).render(model));
   };
 
-  $(function()
+  /**
+   * @param {Object} data
+   * @return {app.ElementType}
+   */
+  app.addElementType = function(data)
   {
-    var connectionsData = [];
+    data.endpoints = Array.isArray(data.endpoints)
+      ? createOrReturn(app.ElementType.Endpoint, data.endpoints)
+      : [];
 
-    var $editor = $('.editor');
-    var $canvas = $editor.find('.editor-canvas');
+    var elementType = new app.ElementType(data);
 
-    /**
-     * @private
-     * @param {Function} type
-     * @param {Array.<Object>} list
-     * @return {Array.<Object>}
-     */
-    function createOrReturn(type, list)
+    app.elementTypes[data.id] = elementType;
+
+    return elementType;
+  };
+
+  var connectionsData = [];
+
+  /**
+   * @param {Object} data
+   * @return {app.Element}
+   * @throws {Error}
+   */
+  app.addElement = function(data)
+  {
+    var type = data.type;
+
+    if (typeof type === 'string')
     {
-      return list.map(function(data)
-      {
-        return data instanceof type ? data : new type(data);
-      });
+      data.type = app.elementTypes[type];
     }
 
-    /**
-     * @param {Object} data
-     * @return {app.ElementType}
-     */
-    function addElementType(data)
+    if (!(data.type instanceof app.ElementType))
     {
-      data.endpoints = Array.isArray(data.endpoints)
-        ? createOrReturn(app.ElementType.Endpoint, data.endpoints)
-        : [];
-
-      var elementType = new app.ElementType(data);
-
-      app.elementTypes[data.id] = elementType;
-
-      return elementType;
+      throw new Error("Unknown element type: " + type);
     }
 
-    /**
-     * @param {Object} data
-     * @return {app.Element}
-     * @throws {Error}
-     */
-    function addElement(data)
+    if (Array.isArray(data.out) && data.out.length > 0)
     {
-      var type = data.type;
-
-      if (typeof type === 'string')
+      if (connectionsData.length === 0)
       {
-        data.type = app.elementTypes[type];
+        _.defer(function()
+        {
+          connectionsData.forEach(app.addConnection);
+          connectionsData = [];
+        });
       }
 
-      if (!(data.type instanceof app.ElementType))
-      {
-        throw new Error("Unknown element type: " + type);
-      }
-
-      if (Array.isArray(data.out) && data.out.length > 0)
-      {
-        connectionsData.push.apply(connectionsData, data.out);
-      }
-
-      data.out = [];
-      data.in = [];
-
-      var element = new app.Element(data);
-
-      app.elements[element.id] = element;
-
-      return element;
+      connectionsData.push.apply(connectionsData, data.out);
     }
 
-    /**
-     * @param {Object} data
-     * @return {app.Connection}
-     * @throws {Error}
-     */
-    function addConnection(data)
-    {
-      var outElement = _.isString(data.out) ? app.elements[data.out] : data.out;
+    data.out = [];
+    data.in = [];
 
-      if (_.isUndefined(outElement))
+    var element = new app.Element(data);
+
+    app.elements[element.id] = element;
+
+    return element;
+  };
+
+  /**
+   * @param {Object} data
+   * @return {app.Connection}
+   * @throws {Error}
+   */
+  app.addConnection = function(data)
+  {
+    var sourceElement = _.isString(data.out) ? app.elements[data.out] : data.out;
+
+    if (_.isUndefined(sourceElement))
+    {
+      throw new Error("Unknown element: " + data.out);
+    }
+
+    var targetElement = _.isString(data.in) ? app.elements[data.in] : data.in;
+
+    if (_.isUndefined(targetElement))
+    {
+      throw new Error("Unknown element: " + data.in);
+    }
+
+    data.out = sourceElement;
+    data.in = targetElement;
+
+    var connection = new app.Connection(data);
+
+    app.connections[connection.id] = connection;
+
+    sourceElement.out.push(connection);
+    targetElement.in.push(connection);
+
+    return connection;
+  };
+
+  /**
+   * @param {Object} data
+   */
+  app.moveConnection = function(data)
+  {
+    var connection = app.connections[data.id];
+
+    if (_.isUndefined(connection))
+    {
+      throw new Error("Unknown connection: " + data.id);
+    }
+
+    if (data.out !== connection.out.id)
+    {
+      var newSourceElement = app.elements[data.out];
+
+      if (_.isUndefined(newSourceElement))
       {
         throw new Error("Unknown element: " + data.out);
       }
 
-      var inElement = _.isString(data.in) ? app.elements[data.in] : data.in;
+      var oldSourceElement = connection.out;
 
-      if (_.isUndefined(inElement))
+      oldSourceElement.out.splice(oldSourceElement.out.indexOf(connection));
+
+      newSourceElement.out.push(connection);
+    }
+
+    if (data.in !== connection.in.id)
+    {
+      var newTargetElement = app.elements[data.in];
+
+      if (_.isUndefined(newTargetElement))
       {
         throw new Error("Unknown element: " + data.in);
       }
 
-      data.out = outElement;
-      data.in = inElement;
+      var oldTargetElement = connection.in;
 
-      var connection = new app.Connection(data);
+      oldTargetElement.in.splice(oldTargetElement.in.indexOf(connection));
 
-      app.connections[connection.id] = connection;
-
-      outElement.out.push(connection);
-      inElement.in.push(connection);
-
-      return connection;
+      newTargetElement.in.push(connection);
     }
+
+    connection.source = data.source;
+    connection.target = data.target;
+
+    return connection;
+  };
+
+  /**
+   * @private
+   * @param {Function} type
+   * @param {Array.<Object>} list
+   * @return {Array.<Object>}
+   */
+  function createOrReturn(type, list)
+  {
+    return list.map(function(data)
+    {
+      return data instanceof type ? data : new type(data);
+    });
+  }
+
+  $(function()
+  {
+    var $editor = $('.editor');
+    var $canvas = $editor.find('.editor-canvas');
 
     var loadElementTypesReq = $.ajax({
       url: '/elementTypes',
       success: function(elementTypesData)
       {
-        elementTypesData.forEach(addElementType);
+        elementTypesData.forEach(app.addElementType);
       }
     });
 
@@ -146,11 +205,13 @@ _.noop = function() {};
       {
         loadElementTypesReq.then(function()
         {
-          elementsData.forEach(addElement);
-          connectionsData.forEach(addConnection);
-          connectionsData = null;
+          elementsData.forEach(app.addElement);
 
-          _.invoke(app.elements, 'render', $canvas);
+          _.defer(function()
+          {
+            _.invoke(app.elements, 'render', $canvas);
+            _.invoke(app.elements, 'renderConnections');
+          });
         });
       }
     });

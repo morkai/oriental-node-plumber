@@ -1,6 +1,6 @@
 var format = require('util').format;
 var _ = require('lodash');
-var step = require('step');
+var step = require('two-step');
 var orientdb = require('orientdb');
 
 var serverConfig = {
@@ -152,7 +152,7 @@ function createClass(className, superClass, properties, done)
 
   steps.push(function createClass()
   {
-    db.createClass(className, superClass, this);
+    db.createClass(className, superClass, this.val());
   });
 
   _.each(properties, function(propertyDef, propertyName)
@@ -174,7 +174,7 @@ function createClass(className, superClass, properties, done)
     steps.push(done);
   }
 
-  step.apply(step, steps);
+  step.apply(null, steps);
 }
 
 /**
@@ -199,7 +199,7 @@ function createCreatePropertyStep(className, propertyName, propertyDef)
     delete propertyDef.linkedType;
     delete propertyDef.linkedClass;
 
-    var nextStep = this;
+    var nextStep = this.val();
 
     db.command(sql, function(err)
     {
@@ -249,7 +249,7 @@ function setPropertyAttributes(className, propertyName, attributes, done)
         className, propertyName, attrName, attrValue
       );
 
-      db.command(sql, this);
+      db.command(sql, this.val());
     });
   });
 
@@ -258,7 +258,7 @@ function setPropertyAttributes(className, propertyName, attributes, done)
     steps.push(done);
   }
 
-  step.apply(step, steps);
+  step.apply(null, steps);
 }
 
 /**

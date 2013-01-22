@@ -52,7 +52,7 @@
 
     this.endpoints.forEach(function(endpoint)
     {
-      element.endpoints[endpoint.id] = endpoint.createForElement(element);
+      element.endpoints[endpoint.id] = endpoint.createJsPlumbEndpoint(element);
     });
   };
 })(window.app);

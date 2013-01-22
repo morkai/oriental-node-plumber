@@ -1,15 +1,14 @@
 var util = require('util');
 
-module.exports = NotFoundError;
+module.exports = FancyError;
 
-function NotFoundError(message)
+function FancyError(message)
 {
   Error.call(this);
   Error.captureStackTrace(this, arguments.callee);
 
-  this.name = 'NotFoundError';
-  this.code = 404;
+  this.name = 'Error';
   this.message = util.format.apply(util, arguments);
 }
 
-util.inherits(NotFoundError, Error);
+util.inherits(FancyError, Error);
