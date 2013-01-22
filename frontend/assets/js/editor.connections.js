@@ -1,17 +1,5 @@
 (function(app)
 {
-  function getXhrError(xhr)
-  {
-    try
-    {
-      return JSON.parse(xhr.responseText).error;
-    }
-    catch (x)
-    {
-      return new Error(xhr.responseText);
-    }
-  }
-
   function createConnection(e)
   {
     var jsPlumbConnection = e.connection;
@@ -33,7 +21,7 @@
 
     req.fail(function(xhr)
     {
-      var err = getXhrError(xhr);
+      var err = app.util.xhrError(xhr);
 
       console.error("Failed to create a connection: %s", err.message);
 
@@ -75,7 +63,7 @@
 
     req.fail(function(xhr)
     {
-      var err = getXhrError(xhr);
+      var err = app.util.xhrError(xhr);
 
       console.log("Failed to move connection: %s", err.message);
 

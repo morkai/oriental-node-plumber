@@ -174,6 +174,46 @@
       }
     });
 
+    editor.$toolbar.find('.editor-toolbar-add-element').click(function(e)
+    {
+      e.preventDefault();
+
+      var btnEl = this;
+
+      btnEl.disabled = true;
+
+      var types = Object.keys(app.elementTypes);
+      var type = types[_.random(types.length - 1)];
+      var name = type.toUpperCase() + ' #' + Object.keys(app.elements).length;
+
+      var req = $.ajax({
+        type: 'post',
+        url: '/elements',
+        dataType: 'json',
+        data: {
+          left: _.random(editor.$canvas.outerWidth()),
+          top: _.random(editor.$canvas.outerHeight()),
+          type: type,
+          name: name
+        }
+      });
+
+      req.fail(function(xhr)
+      {
+        var err = app.util.xhrError(xhr);
+      });
+
+      req.done(function(res)
+      {
+        app.addElement(res).render(editor.$canvas);
+      });
+
+      req.always(function()
+      {
+        btnEl.disabled = false;
+      });
+    });
+
     editor.toggleGrid();
     editor.toggleSnapToGrid();
   });

@@ -1,5 +1,3 @@
-_.noop = function() {};
-
 (function(app)
 {
   app.DRAG_THROTTLE_TIME = 1000 / 60;
