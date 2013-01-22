@@ -17,15 +17,6 @@ app.get('/elements', function(req, res, next)
 
 app.post('/elements', function(req, res, next)
 {
-  var socketId;
-
-  if (typeof req.body.socketId === 'string')
-  {
-    socketId = req.body.socketId;
-
-    delete req.body.socketId;
-  }
-
   Element.create(req.body, function(err, element)
   {
     if (err) return next(err);
@@ -34,7 +25,6 @@ app.post('/elements', function(req, res, next)
 
     app.io.sockets
       .in(app.DEFAULT_SCREEN)
-      .except(socketId)
       .emit('element.created', element);
 
     return res.send(element);
