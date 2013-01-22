@@ -149,13 +149,21 @@
   {
     if (this.out)
     {
-      this.out.out.splice(this.out.out.indexOf(this), 1);
+      if (this.out.out)
+      {
+        this.out.out.splice(this.out.out.indexOf(this), 1);
+      }
+
       this.out = null;
     }
 
     if (this.in)
     {
-      this.in.in.splice(this.in.in.indexOf(this), 1);
+      if (this.in.in)
+      {
+        this.in.in.splice(this.in.in.indexOf(this), 1);
+      }
+
       this.in = null;
     }
 
