@@ -2,7 +2,7 @@ var _ = require('lodash');
 var step = require('two-step');
 var Element = require('./models/Element');
 
-var DEFAULT_SCREEN = 'screen123';
+app.DEFAULT_SCREEN = 'screen123';
 
 var sockets = app.io.sockets;
 var socketCount = 1;
@@ -11,7 +11,7 @@ sockets.on('connection', function(socket)
 {
   socket.name = 'Guest #' + socketCount++;
 
-  sockets.in(DEFAULT_SCREEN).emit(
+  sockets.in(app.DEFAULT_SCREEN).emit(
     'screen.joined',
     [{
       id: socket.id,
@@ -19,10 +19,10 @@ sockets.on('connection', function(socket)
     }]
   );
 
-  socket.join(DEFAULT_SCREEN);
+  socket.join(app.DEFAULT_SCREEN);
 
   socket.emit('screen.joined',
-    sockets.clients(DEFAULT_SCREEN).map(function(joinedSocket)
+    sockets.clients(app.DEFAULT_SCREEN).map(function(joinedSocket)
     {
       return {
         id: joinedSocket.id,
@@ -33,12 +33,12 @@ sockets.on('connection', function(socket)
 
   socket.on('disconnect', function()
   {
-    sockets.in(DEFAULT_SCREEN).emit('screen.left', socket.id);
+    sockets.in(app.DEFAULT_SCREEN).emit('screen.left', socket.id);
   });
 
   socket.on('element.dragStart', function onDragStart(movedElements, done)
   {
-    sockets.in(DEFAULT_SCREEN).except(socket.id).emit(
+    sockets.in(app.DEFAULT_SCREEN).except(socket.id).emit(
       'element.dragStarted', socket.id, movedElements
     );
 
@@ -50,7 +50,7 @@ sockets.on('connection', function(socket)
 
   socket.on('element.drag', function onDrag(movedElements, done)
   {
-    sockets.in(DEFAULT_SCREEN).except(socket.id).emit(
+    sockets.in(app.DEFAULT_SCREEN).except(socket.id).emit(
       'element.dragged', socket.id, movedElements
     );
 
@@ -94,7 +94,7 @@ sockets.on('connection', function(socket)
       }
       else
       {
-        sockets.in(DEFAULT_SCREEN).except(socket.id).emit(
+        sockets.in(app.DEFAULT_SCREEN).except(socket.id).emit(
           'element.dragStopped', socket.id, movedElements
         );
       }
@@ -110,7 +110,7 @@ sockets.on('connection', function(socket)
 
   socket.on('chat.message', function onChatMessage(data)
   {
-    sockets.in(DEFAULT_SCREEN).except(socket.id).emit(
+    sockets.in(app.DEFAULT_SCREEN).except(socket.id).emit(
       'chat.messaged', socket.id, data.text
     );
   });

@@ -194,13 +194,16 @@
           left: _.random(editor.$canvas.outerWidth()),
           top: _.random(editor.$canvas.outerHeight()),
           type: type,
-          name: name
+          name: name,
+          socketId: app.socket.id
         }
       });
 
       req.fail(function(xhr)
       {
         var err = app.util.xhrError(xhr);
+
+        console.log("Failed to add a new element: %s", err.message);
       });
 
       req.done(function(res)
