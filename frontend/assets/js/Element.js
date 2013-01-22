@@ -118,6 +118,37 @@
     });
   };
 
+  Element.prototype.destroy = function()
+  {
+    if (this.out)
+    {
+      this.out.forEach(function(connection)
+      {
+        connection.destroy();
+      });
+      this.out = null;
+    }
+
+    if (this.in)
+    {
+      this.in.forEach(function(connection)
+      {
+        connection.destroy();
+      });
+      this.in = null;
+    }
+
+    this.endpoints = null;
+
+    if (this.$)
+    {
+      jsPlumb.removeAllEndpoints(this.$[0]);
+
+      this.$.remove();
+      this.$ = null;
+    }
+  };
+
   /**
    * @private
    * @param {Array.<Number>} gridSize

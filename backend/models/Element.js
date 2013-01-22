@@ -1,5 +1,7 @@
+var format = require('util').format;
 var _ = require('lodash');
 var NotFoundError = require('../util/NotFoundError');
+var isRid = require('../util/orient').isRid;
 
 /**
  * @param {function(Error?, Array.<Object>?)} done
@@ -106,4 +108,40 @@ exports.delete = function(elementOrId, done)
   {
     app.db.delete(elementOrId, done);
   }
+};
+
+/**
+ * @param {Array.<String>} elementIds
+ * @param {function(Error?)=} done
+ */
+exports.deleteMultiple = function(elementIds, done)
+{
+  var elementRids = elementIds
+    .map(function(elementId) { return '#' + elementId; })
+    .filter(isRid);
+
+  if (elementRids.length === 0)
+  {
+    return done && done(null, 0);
+  }
+
+  var sql = format(
+    "DELETE VERTEX Element WHERE @rid IN [%s]",
+    elementRids.join(',')
+  );
+
+  app.db.command(sql, function(err, result)
+  {
+    if (err)
+    {
+      return done(err);
+    }
+
+    if (_.isObject(result) && _.isNumber(result.value))
+    {
+      return done(null, result.value);
+    }
+
+    return done(null, -1);
+  });
 };

@@ -37,6 +37,12 @@
      * @type {String}
      */
     this.target = data.target;
+
+    /**
+     * @private
+     * @type {jsPlumb.Connection|null}
+     */
+    this.jsPlumbConnection = null;
   }
 
   /**
@@ -119,6 +125,8 @@
   Connection.prototype.setUpJsPlumbConnection = function(jsPlumbConnection)
   {
     jsPlumbConnection.setParameter('connectionId', this.id);
+
+    this.jsPlumbConnection = jsPlumbConnection;
   };
 
   /**
@@ -137,4 +145,25 @@
     return this.in.endpoints[this.target];
   };
 
+  Connection.prototype.destroy = function()
+  {
+    if (this.out)
+    {
+      this.out.out.splice(this.out.out.indexOf(this), 1);
+      this.out = null;
+    }
+
+    if (this.in)
+    {
+      this.in.in.splice(this.in.in.indexOf(this), 1);
+      this.in = null;
+    }
+
+    if (this.jsPlumbConnection)
+    {
+      jsPlumb.detach(this.jsPlumbConnection);
+
+      this.jsPlumbConnection = null;
+    }
+  };
 })(window.app);

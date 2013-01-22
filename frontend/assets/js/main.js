@@ -86,6 +86,33 @@
   };
 
   /**
+   * @param {String} elementId
+   */
+  app.deleteElement = function(elementId)
+  {
+    var element = app.elements[elementId];
+
+    if (_.isUndefined(element))
+    {
+      return;
+    }
+
+    delete app.elements[elementId];
+
+    element.out.forEach(function(connection)
+    {
+      delete app.connections[connection.id];
+    });
+
+    element.in.forEach(function(connection)
+    {
+      delete app.connections[connection.id];
+    });
+
+    element.destroy();
+  };
+
+  /**
    * @param {Object} data
    * @return {app.Connection}
    * @throws {Error}
