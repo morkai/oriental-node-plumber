@@ -32,6 +32,8 @@
     jsPlumb.Defaults.Connector =
       app.Connection.getConnectorFromType(connectorType);
 
+    editor.connectorType = connectorType;
+
     app.publish('editor.connectorType.changed', connectorType);
   };
 
