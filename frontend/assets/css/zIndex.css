@@ -16,3 +16,6 @@
 .element-connection {
   z-index: 500;
 }
+.tooltip {
+  z-index: 2001;
+}
