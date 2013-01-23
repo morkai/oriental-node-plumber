@@ -17,7 +17,14 @@ app.post('/connections', function(req, res, next)
   {
     if (err) return next(err);
 
-    return res.send(toJSON(connection));
+    connection = toJSON(connection);
+
+    app.io.sockets
+      .in(app.DEFAULT_SCREEN)
+      .except(req.headers['x-socket-id'])
+      .emit('connection.created', connection);
+
+    return res.send(connection);
   });
 });
 

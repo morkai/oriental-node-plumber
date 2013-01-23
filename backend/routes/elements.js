@@ -25,6 +25,7 @@ app.post('/elements', function(req, res, next)
 
     app.io.sockets
       .in(app.DEFAULT_SCREEN)
+      .except(req.headers['x-socket-id'])
       .emit('element.created', element);
 
     return res.send(element);
@@ -33,20 +34,23 @@ app.post('/elements', function(req, res, next)
 
 app.del('/elements', function(req, res, next)
 {
-  if (!Array.isArray(req.body) || req.body.length === 0)
+  var elementIds = req.body;
+
+  if (!Array.isArray(elementIds) || elementIds.length === 0)
   {
     return res.send(400);
   }
 
-  Element.deleteMultiple(req.body, function(err)
+  Element.deleteMultiple(elementIds, function(err)
   {
     if (err) return next(err);
 
     app.io.sockets
       .in(app.DEFAULT_SCREEN)
-      .emit('element.deleted', req.body);
+      .except(req.headers['x-socket-id'])
+      .emit('element.deleted', elementIds);
 
-    return res.send(204);
+    return res.send(elementIds);
   })
 });
 
@@ -84,6 +88,7 @@ app.del('/elements/:id', function(req, res, next)
 
     app.io.sockets
       .in(app.DEFAULT_SCREEN)
+      .except(req.headers['x-socket-id'])
       .emit('element.deleted', [req.params.id]);
 
     return res.send(204);

@@ -205,7 +205,12 @@
       {
         var err = app.util.xhrError(xhr);
 
-        console.log("Failed to add a new element: %s", err.message);
+        console.error("Failed to add a new element: %s", err.message);
+      });
+
+      req.done(function(data)
+      {
+        app.addElement(data).render(editor.$canvas);
       });
 
       req.always(function()

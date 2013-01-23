@@ -11,6 +11,12 @@
   {
     app.socket.id = app.socket.socket.sessionid;
 
+    $.ajaxSetup({
+      headers: {
+        'X-Socket-Id': app.socket.id
+      }
+    });
+
     app.publish('socket.connected', app.socket.id);
   });
 

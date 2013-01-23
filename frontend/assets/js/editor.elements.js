@@ -1,14 +1,16 @@
 (function(app)
 {
+  function deleteElements(elementIds)
+  {
+    elementIds.forEach(app.deleteElement);
+  }
+
   app.socket.on('element.created', function addRemoteElement(data)
   {
     app.addElement(data).render(app.editor.$canvas);
   });
 
-  app.socket.on('element.deleted', function removeRemoteElement(elementIds)
-  {
-    elementIds.forEach(app.deleteElement);
-  });
+  app.socket.on('element.deleted', deleteElements);
 
   $(function()
   {
@@ -37,6 +39,8 @@
 
         console.error("Failed to delete selected elements: %s", err.message);
       });
+
+      req.done(deleteElements);
 
       return false;
     });

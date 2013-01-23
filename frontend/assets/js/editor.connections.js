@@ -76,6 +76,11 @@
     });
   }
 
+  app.socket.on('connection.created', function(data)
+  {
+    app.addConnection(data).createJsPlumbConnection();
+  });
+
   jsPlumb.bind('connection', function(e)
   {
     //console.log('jsPlumb#connection', e);
@@ -121,5 +126,4 @@
   {
     //console.log('jsPlumb#endpointDblClick', endpoint);
   });
-
 })(window.app);
