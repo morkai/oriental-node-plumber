@@ -10,8 +10,8 @@ var serverConfig = {
 
 var dbConfig = {
   name: 'plumber',
-  user_name: 'plumber',
-  user_password: 'nohax'
+  user_name: 'admin',
+  user_password: 'admin'
 };
 
 var schema = {
