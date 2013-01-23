@@ -81,6 +81,11 @@
     app.addConnection(data).createJsPlumbConnection();
   });
 
+  app.socket.on('connection.moved', function(data)
+  {
+    app.moveConnection(data).createJsPlumbConnection();
+  });
+
   jsPlumb.bind('connection', function(e)
   {
     //console.log('jsPlumb#connection', e);

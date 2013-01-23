@@ -51,7 +51,14 @@ app.put('/connections/:id', function(req, res, next)
 
         if (err) return next(err);
 
-        return res.send(toJSON(connection));
+        connection = toJSON(connection);
+
+        app.io.sockets
+          .in(app.DEFAULT_SCREEN)
+          .except(req.headers['x-socket-id'])
+          .emit('connection.moved', connection);
+
+        return res.send(connection);
       });
       break;
 

@@ -101,6 +101,11 @@
    */
   Connection.prototype.createJsPlumbConnection = function()
   {
+    if (this.jsPlumbConnection)
+    {
+      jsPlumb.detach(this.jsPlumbConnection);
+    }
+
     var jsPlumbConnection = jsPlumb.connect({
       source: this.getSourceEndpoint(),
       target: this.getTargetEndpoint(),
