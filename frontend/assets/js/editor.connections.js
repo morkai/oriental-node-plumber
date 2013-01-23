@@ -15,8 +15,7 @@
     var req = $.ajax({
       type: 'post',
       url: '/connections',
-      dataType: 'json',
-      data: data
+      data: JSON.stringify(data)
     });
 
     req.fail(function(xhr)
@@ -57,8 +56,7 @@
     var req = $.ajax({
       type: 'put',
       url: '/connections/' + connectionId,
-      dataType: 'json',
-      data: data
+      data: JSON.stringify(data)
     });
 
     req.fail(function(xhr)

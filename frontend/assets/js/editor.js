@@ -188,16 +188,17 @@
       var type = types[_.random(types.length - 1)];
       var name = type.toUpperCase() + ' #' + Object.keys(app.elements).length;
 
+      var data = {
+        left: _.random(editor.$canvas.outerWidth()),
+        top: _.random(editor.$canvas.outerHeight()),
+        type: type,
+        name: name
+      };
+
       var req = $.ajax({
         type: 'post',
         url: '/elements',
-        dataType: 'json',
-        data: {
-          left: _.random(editor.$canvas.outerWidth()),
-          top: _.random(editor.$canvas.outerHeight()),
-          type: type,
-          name: name
-        }
+        data: JSON.stringify(data)
       });
 
       req.fail(function(xhr)

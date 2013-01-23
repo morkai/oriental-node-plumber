@@ -8,6 +8,11 @@
   app.USER_COLOR = '#00BFFF';
   app.SPARE_USER_COLOR = 'grey';
 
+  $.ajaxSetup({
+    contentType: 'application/json; charset=UTF-8',
+    cache: false
+  });
+
   app.elementTypes = {};
   app.elements = {};
   app.selectedElements = [];

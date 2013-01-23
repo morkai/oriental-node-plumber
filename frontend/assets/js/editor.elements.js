@@ -28,8 +28,6 @@
       var req = $.ajax({
         type: 'delete',
         url: '/elements',
-        contentType: 'application/json',
-        dataType: 'json',
         data: JSON.stringify(elementIds)
       });
 
