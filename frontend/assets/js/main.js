@@ -175,8 +175,9 @@
       var oldSourceElement = connection.out;
 
       oldSourceElement.out.splice(oldSourceElement.out.indexOf(connection));
-
       newSourceElement.out.push(connection);
+
+      connection.out = newSourceElement;
     }
 
     if (data.in !== connection.in.id)
@@ -191,8 +192,9 @@
       var oldTargetElement = connection.in;
 
       oldTargetElement.in.splice(oldTargetElement.in.indexOf(connection));
-
       newTargetElement.in.push(connection);
+
+      connection.in = newTargetElement;
     }
 
     connection.source = data.source;
