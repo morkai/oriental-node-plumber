@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var step = require('two-step');
+var step = require('h5.step');
 var Element = require('./models/Element');
 
 app.DEFAULT_SCREEN = 'screen123';
@@ -72,7 +72,7 @@ sockets.on('connection', function(socket)
         {
           if (err)
           {
-            throw err;
+            return this.skip(err);
           }
 
           var data = {
@@ -80,7 +80,7 @@ sockets.on('connection', function(socket)
             top: top
           };
 
-          Element.edit(id, data, this.val());
+          Element.edit(id, data, this.next());
         });
       })(movedElements[i], movedElements[i + 1], movedElements[i + 2]);
     }
@@ -105,7 +105,7 @@ sockets.on('connection', function(socket)
       }
     });
 
-    step.apply(null, steps);
+    step(steps);
   });
 
   socket.on('chat.message', function onChatMessage(data)

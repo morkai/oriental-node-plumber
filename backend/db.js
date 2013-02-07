@@ -1,6 +1,6 @@
 var format = require('util').format;
 var _ = require('lodash');
-var step = require('two-step');
+var step = require('h5.step');
 var orientdb = require('orientdb');
 
 var serverConfig = {
@@ -117,7 +117,7 @@ function ensureSchemaIsSetup(done)
     {
       if (err)
       {
-        throw err;
+        return this.done(done, err);
       }
 
       var superClass = classDef.extends;
@@ -135,7 +135,7 @@ function ensureSchemaIsSetup(done)
 
   if (steps.length > 0)
   {
-    step.apply(step, steps);
+    step(steps);
   }
 }
 
@@ -152,7 +152,7 @@ function createClass(className, superClass, properties, done)
 
   steps.push(function createClass()
   {
-    db.createClass(className, superClass, this.val());
+    db.createClass(className, superClass, this.next());
   });
 
   _.each(properties, function(propertyDef, propertyName)
@@ -174,7 +174,7 @@ function createClass(className, superClass, properties, done)
     steps.push(done);
   }
 
-  step.apply(null, steps);
+  step(steps);
 }
 
 /**
@@ -188,9 +188,11 @@ function createCreatePropertyStep(className, propertyName, propertyDef)
 {
   return function createProperty(err)
   {
+    var nextStep = this.next();
+
     if (err)
     {
-      throw err;
+      return nextStep(err);
     }
 
     var sql = createCreatePropertyCommand(className, propertyName, propertyDef);
@@ -198,8 +200,6 @@ function createCreatePropertyStep(className, propertyName, propertyDef)
     delete propertyDef.type;
     delete propertyDef.linkedType;
     delete propertyDef.linkedClass;
-
-    var nextStep = this.val();
 
     db.command(sql, function(err)
     {
@@ -242,14 +242,14 @@ function setPropertyAttributes(className, propertyName, attributes, done)
     {
       if (err)
       {
-        throw err;
+        return this.done(done, err);
       }
 
       var sql = createAlterPropertyCommand(
         className, propertyName, attrName, attrValue
       );
 
-      db.command(sql, this.val());
+      db.command(sql, this.next());
     });
   });
 
@@ -258,7 +258,7 @@ function setPropertyAttributes(className, propertyName, attributes, done)
     steps.push(done);
   }
 
-  step.apply(null, steps);
+  step(steps);
 }
 
 /**

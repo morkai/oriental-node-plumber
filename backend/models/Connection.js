@@ -1,6 +1,6 @@
 var format = require('util').format;
 var _ = require('lodash');
-var step = require('two-step');
+var step = require('h5.step');
 var NotFoundError = require('../util/NotFoundError');
 var FancyError = require('../util/FancyError');
 var ElementType = require('./ElementType');
@@ -63,11 +63,11 @@ exports.create = function(data, done)
       var hash = _.pick(data, ['type', 'source', 'target']);
 
       app.db.createEdge(
-        this.data.sourceElement,
-        this.data.targetElement,
+        this.sourceElement,
+        this.targetElement,
         hash,
         {class: 'Connection'},
-        this.val()
+        this.next()
       );
     },
     done
@@ -293,12 +293,12 @@ function moveConnection(connection, data, done)
       connection.target = data.target;
     }
 
-    app.db.save(connection, this.val());
+    app.db.save(connection, this.next());
   });
 
   steps.push(done);
 
-  step.apply(null, steps);
+  step(steps);
 }
 
 /**
@@ -310,11 +310,8 @@ function createGetElementsStep(data)
 {
   return function getElementsStep()
   {
-    var sourceCb = this.val();
-    var targetCb = this.val();
-
-    Element.getOne(data.out, sourceCb);
-    Element.getOne(data.in, targetCb);
+    Element.getOne(data.out, this.parallel());
+    Element.getOne(data.in, this.parallel());
   };
 }
 
@@ -330,31 +327,28 @@ function createGetEndpointsStep(data, done)
   {
     if (err)
     {
-      return this.jumpTo(done, [err]);
+      return this.done(done, err);
     }
 
     if (!sourceElement)
     {
-      return this.jumpTo(done, [new FancyError(
+      return this.done(done, new FancyError(
         "Source element does not exist: [%s]", data.out
-      )]);
+      ));
     }
 
     if (!targetElement)
     {
-      return this.jumpTo(done, [new FancyError(
+      return this.done(done, new FancyError(
         "Target element does not exist: [%s]", data.in
-      )]);
+      ));
     }
 
-    this.data.sourceElement = sourceElement;
-    this.data.targetElement = targetElement;
+    this.sourceElement = sourceElement;
+    this.targetElement = targetElement;
 
-    var sourceCb = this.val();
-    var targetCb = this.val();
-
-    ElementType.getEndpoint(sourceElement.type, data.source, sourceCb);
-    ElementType.getEndpoint(targetElement.type, data.target, targetCb);
+    ElementType.getEndpoint(sourceElement.type, data.source, this.parallel());
+    ElementType.getEndpoint(targetElement.type, data.target, this.parallel());
   };
 }
 
@@ -371,22 +365,19 @@ function createGetConnectionsNumbersStep(data, done)
   {
     if (err)
     {
-      return this.jumpTo(done, [err]);
+      return this.done(done, err);
     }
 
-    this.data.sourceEndpoint = sourceEndpoint;
-    this.data.targetEndpoint = targetEndpoint;
+    this.sourceEndpoint = sourceEndpoint;
+    this.targetEndpoint = targetEndpoint;
 
     var sql = "SELECT out[source='%s'].size(), in[target='%s'].size() FROM #%s";
 
     var sourceSql = format(sql, data.source, data.source, data.out);
     var targetSql = format(sql, data.target, data.target, data.in);
 
-    var sourceCb = this.val();
-    var targetCb = this.val();
-
-    app.db.command(sourceSql, sourceCb);
-    app.db.command(targetSql, targetCb);
+    app.db.command(sourceSql, this.parallel());
+    app.db.command(targetSql, this.parallel());
   };
 }
 
@@ -406,51 +397,51 @@ function createValidateConnectionsNumbersStep(options, data, done)
   {
     if (err)
     {
-      return this.jumpTo(done, [err]);
+      return this.done(done, err);
     }
 
     if (!Array.isArray(sourceResult) || sourceResult.length === 0)
     {
-      return this.jumpTo(done, [new FancyError(
+      return this.done(done, new FancyError(
         "Source element does not exist: [%s]", data.out
-      )]);
+      ));
     }
 
     if (!Array.isArray(targetResult) || targetResult.length === 0)
     {
-      return this.jumpTo(done, [new FancyError(
+      return this.done(done, new FancyError(
         "Target element does not exist: [%s]", data.in
-      )]);
+      ));
     }
 
-    var sourceMaxConnections = this.data.sourceEndpoint.maxConnections;
+    var sourceMaxConnections = this.sourceEndpoint.maxConnections;
     var sourceConnectionCount =
       (sourceResult[0].in || 0) + (sourceResult[0].out || 0);
 
     if (options.validateSource && sourceConnectionCount >= sourceMaxConnections)
     {
-      return this.jumpTo(done, [new FancyError(
+      return this.done(done, new FancyError(
         "Connection limit of [%d] was exceeded for endpoint [%s] of element [%s]: [%d]",
         sourceMaxConnections,
-        this.data.sourceEndpoint.id,
-        this.data.sourceElement['@rid'],
+        this.sourceEndpoint.id,
+        this.sourceElement['@rid'],
         sourceConnectionCount
-      )]);
+      ));
     }
 
-    var targetMaxConnections = this.data.targetEndpoint.maxConnections;
+    var targetMaxConnections = this.targetEndpoint.maxConnections;
     var targetConnectionCount =
       (targetResult[0].in || 0) + (targetResult[0].out || 0);
 
     if (options.validateTarget && targetConnectionCount >= targetMaxConnections)
     {
-      return this.jumpTo(done, [new FancyError(
+      return this.done(done, new FancyError(
         "Connection limit of [%d] was exceeded for endpoint [%s] of element [%s]: [%d]",
         targetMaxConnections,
-        this.data.targetEndpoint.id,
-        this.data.targetElement['@rid'],
+        this.targetEndpoint.id,
+        this.targetElement['@rid'],
         targetConnectionCount
-      )]);
+      ));
     }
   };
 }
@@ -470,7 +461,7 @@ function createRemoveFromOldElementStep(
   {
     if (err)
     {
-      return this.jumpTo(done, [err]);
+      return this.done(done, err);
     }
 
     var sql = format(
@@ -480,7 +471,7 @@ function createRemoveFromOldElementStep(
       connectionRid
     );
 
-    app.db.command(sql, this.val());
+    app.db.command(sql, this.next());
   };
 }
 
@@ -498,7 +489,7 @@ function createAddToNewElementStep(type, connectionRid, newElementRid, done)
   {
     if (err)
     {
-      return this.jumpTo(done, [err]);
+      return this.done(done, err);
     }
 
     var sql = format(
@@ -508,6 +499,6 @@ function createAddToNewElementStep(type, connectionRid, newElementRid, done)
       connectionRid
     );
 
-    app.db.command(sql, this.val());
+    app.db.command(sql, this.next());
   };
 }
